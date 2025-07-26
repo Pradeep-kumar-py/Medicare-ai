@@ -20,14 +20,14 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary/5 to-secondary/5">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-primary-light to-secondary">
       <div className="w-full max-w-md px-4">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-primary mb-2">
-            Vital Vue Assist
+            Medcare AI
           </h1>
           <p className="text-muted-foreground">
-            Your AI-powered healthcare companion
+            Your AI-powered healthcare assistant
           </p>
         </div>
         <AuthForm onSuccess={handleAuthSuccess} />

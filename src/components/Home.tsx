@@ -78,9 +78,9 @@ const Home: React.FC = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="bg-gradient-healing py-12 sm:py-16 md:py-20 text-white">
+      <section className="bg-gradient-to-r from-primary to-secondary py-12 sm:py-16 md:py-20 text-white">
         <div className="container text-center space-y-4 sm:space-y-6 md:space-y-8 px-4">
-          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-white/20 rounded-full mb-4 sm:mb-6 md:mb-8">
+<div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-card/20 rounded-full mb-4 sm:mb-6 md:mb-8">
             <Heart className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" />
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight px-2">

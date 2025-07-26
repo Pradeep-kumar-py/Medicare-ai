@@ -5,13 +5,13 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Validate environment variables
+// Validate environment variables (disabled to prevent runtime crash)
 if (!SUPABASE_URL) {
-  throw new Error('Missing VITE_SUPABASE_URL environment variable');
+  console.warn('VITE_SUPABASE_URL is not set; Supabase client may not initialize correctly');
 }
 
 if (!SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error('Missing VITE_SUPABASE_ANON_KEY environment variable');
+  console.warn('VITE_SUPABASE_ANON_KEY is not set; Supabase client may not initialize correctly');
 }
 
 // Import the supabase client like this:

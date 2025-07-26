@@ -52,7 +52,7 @@ const Teleconsultation: React.FC = () => {
   const [showChat, setShowChat] = useState(false);
   
   const videoRef = useRef<HTMLVideoElement>(null);
-  const callTimerRef = useRef<NodeJS.Timeout>();
+  const callTimerRef = useRef<NodeJS.Timeout | null>(null);
 
   // Mock doctors
   const doctors: Doctor[] = [
@@ -310,7 +310,7 @@ const Teleconsultation: React.FC = () => {
                   <div className="flex items-start space-x-4">
                     <div className="relative">
                       <div className="text-4xl">{doctor.image}</div>
-                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${getStatusDot(doctor.status)}`} />
+                      <div className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-border ${getStatusDot(doctor.status)}`} />
                     </div>
                     <div className="flex-1">
                       <CardTitle className="text-lg">{doctor.name}</CardTitle>
