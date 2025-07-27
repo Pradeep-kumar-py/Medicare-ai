@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
+import { AuthErrorBoundary } from "./components/auth/AuthErrorBoundary";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Layout from "./components/Layout";
@@ -22,6 +23,7 @@ import InsuranceSupport from "./components/InsuranceSupport";
 import Profile from "./components/Profile";
 import Chatbot from "./components/Chatbot";
 import AuthPage from "./pages/AuthPage";
+import { PasswordResetPage } from "./pages/PasswordResetPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,13 +33,15 @@ const App = () => (
     <ThemeProvider defaultTheme="system" storageKey="medicare-ai-theme">
       <TooltipProvider>
         <LanguageProvider>
-          <AuthProvider>
-            <Toaster />
-            <Sonner />
-            <BrowserRouter>
+          <AuthErrorBoundary>
+            <AuthProvider>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
               <Routes>
                 {/* Public routes */}
                 <Route path="/auth" element={<AuthPage />} />
+                <Route path="/reset-password" element={<PasswordResetPage />} />
                 
                 {/* Protected routes */}
                 <Route path="/" element={
@@ -152,10 +156,11 @@ const App = () => (
               </Routes>
             </BrowserRouter>
           </AuthProvider>
-        </LanguageProvider>
-      </TooltipProvider>
-    </ThemeProvider>
-  </QueryClientProvider>
+        </AuthErrorBoundary>
+      </LanguageProvider>
+    </TooltipProvider>
+  </ThemeProvider>
+</QueryClientProvider>
 );
 
 export default App;

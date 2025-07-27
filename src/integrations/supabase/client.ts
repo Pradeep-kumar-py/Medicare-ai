@@ -5,13 +5,13 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Validate environment variables (disabled to prevent runtime crash)
+// Validate environment variables
 if (!SUPABASE_URL) {
-  console.warn('VITE_SUPABASE_URL is not set; Supabase client may not initialize correctly');
+  throw new Error('VITE_SUPABASE_URL is required but not set');
 }
 
 if (!SUPABASE_PUBLISHABLE_KEY) {
-  console.warn('VITE_SUPABASE_ANON_KEY is not set; Supabase client may not initialize correctly');
+  throw new Error('VITE_SUPABASE_ANON_KEY is required but not set');
 }
 
 // Import the supabase client like this:
@@ -19,14 +19,20 @@ if (!SUPABASE_PUBLISHABLE_KEY) {
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
   auth: {
-    storage: localStorage,
+    storage: typeof window !== 'undefined' ? localStorage : undefined,
     persistSession: true,
     autoRefreshToken: true,
     flowType: 'pkce',
+    detectSessionInUrl: true,
   },
   global: {
     headers: {
-      'X-Client-Info': 'vital-vue-assist',
+      'X-Client-Info': 'medcare-ai-app',
+    },
+  },
+  realtime: {
+    params: {
+      eventsPerSecond: 10,
     },
   },
 });

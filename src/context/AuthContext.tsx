@@ -40,19 +40,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      // Set a timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
-      );
-      
-      const profilePromise = profileService.getCurrentProfile();
-      
-      const profile = await Promise.race([profilePromise, timeoutPromise]);
-      setProfile(profile as any);
+      const profile = await profileService.getCurrentProfile();
+      setProfile(profile);
     } catch (error) {
       console.error('Error fetching profile:', error);
       // Don't block auth flow if profile fetch fails
       setProfile(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -85,9 +80,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           await fetchProfile(session.user.id);
         } else {
           setProfile(null);
+          setLoading(false);
         }
-        
-        setLoading(false);
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
@@ -113,10 +107,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await fetchProfile(session.user.id);
       } else {
         setProfile(null);
-      }
-      
-      // Only set loading to false if we haven't already
-      if (loading) {
         setLoading(false);
       }
     });
@@ -125,7 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       mounted = false;
       subscription.unsubscribe();
     };
-  }, []);
+  }, []); // Remove loading dependency to prevent infinite loops
 
   const signIn = async (email: string, password: string) => {
     try {

@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from '../ui/alert';
 import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from '../../hooks/use-toast';
+import { supabase } from '../../integrations/supabase/client';
 
 interface AuthFormProps {
   onSuccess?: () => void;
@@ -16,6 +17,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -58,6 +60,38 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Handle password reset
+    if (showForgotPassword) {
+      if (!formData.email) {
+        setErrors({ email: 'Email is required for password reset' });
+        return;
+      }
+      
+      setIsLoading(true);
+      try {
+        const { error } = await supabase.auth.resetPasswordForEmail(formData.email, {
+          redirectTo: `${window.location.origin}/reset-password`,
+        });
+        
+        if (error) throw error;
+        
+        toast({
+          title: "Password Reset Email Sent",
+          description: "Please check your email for password reset instructions.",
+        });
+        setShowForgotPassword(false);
+      } catch (error: any) {
+        toast({
+          title: "Password Reset Failed",
+          description: error.message || "Failed to send password reset email",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
+      }
+      return;
+    }
     
     if (!validateForm()) return;
 
@@ -126,18 +160,24 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
     <Card className="w-full max-w-md mx-auto">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl text-center">
-          {isLogin ? 'Welcome Back' : 'Create Account'}
+          {showForgotPassword 
+            ? 'Reset Password' 
+            : (isLogin ? 'Welcome Back' : 'Create Account')
+          }
         </CardTitle>
         <CardDescription className="text-center">
-          {isLogin 
-            ? 'Sign in to your account to continue' 
-            : 'Create a new account to get started'
+          {showForgotPassword 
+            ? 'Enter your email to receive password reset instructions'
+            : (isLogin 
+              ? 'Sign in to your account to continue' 
+              : 'Create a new account to get started'
+            )
           }
         </CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          {!isLogin && (
+          {!isLogin && !showForgotPassword && (
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
               <div className="relative">
@@ -177,51 +217,55 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
             )}
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password">Password</Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="password"
-                name="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                value={formData.password}
-                onChange={handleInputChange}
-                className={`pl-10 pr-10 ${errors.password ? 'border-destructive' : ''}`}
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
-              >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </button>
-            </div>
-            {errors.password && (
-              <p className="text-sm text-destructive">{errors.password}</p>
-            )}
-          </div>
-
-          {!isLogin && (
-            <div className="space-y-2">
-              <Label htmlFor="confirmPassword">Confirm Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  placeholder="Confirm your password"
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className={`pl-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
-                />
+          {!showForgotPassword && (
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="password"
+                    name="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    className={`pl-10 pr-10 ${errors.password ? 'border-destructive' : ''}`}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-muted-foreground hover:text-foreground"
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
+                {errors.password && (
+                  <p className="text-sm text-destructive">{errors.password}</p>
+                )}
               </div>
-              {errors.confirmPassword && (
-                <p className="text-sm text-destructive">{errors.confirmPassword}</p>
+
+              {!isLogin && (
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      id="confirmPassword"
+                      name="confirmPassword"
+                      type="password"
+                      placeholder="Confirm your password"
+                      value={formData.confirmPassword}
+                      onChange={handleInputChange}
+                      className={`pl-10 ${errors.confirmPassword ? 'border-destructive' : ''}`}
+                    />
+                  </div>
+                  {errors.confirmPassword && (
+                    <p className="text-sm text-destructive">{errors.confirmPassword}</p>
+                  )}
+                </div>
               )}
-            </div>
+            </>
           )}
 
           <Button 
@@ -229,37 +273,52 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
             className="w-full" 
             disabled={isLoading}
           >
-            {isLoading ? 'Please wait...' : (isLogin ? 'Sign In' : 'Create Account')}
+            {isLoading ? 'Please wait...' : (
+              showForgotPassword ? 'Send Reset Email' : 
+              (isLogin ? 'Sign In' : 'Create Account')
+            )}
           </Button>
         </form>
 
         <div className="mt-4 text-center">
-          <button
-            type="button"
-            onClick={() => {
-              setIsLogin(!isLogin);
-              setErrors({});
-              setFormData({ email: '', password: '', fullName: '', confirmPassword: '' });
-            }}
-            className="text-sm text-primary hover:underline"
-          >
-            {isLogin 
-              ? "Don't have an account? Sign up" 
-              : "Already have an account? Sign in"
-            }
-          </button>
+          {!showForgotPassword ? (
+            <button
+              type="button"
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setErrors({});
+                setFormData({ email: '', password: '', fullName: '', confirmPassword: '' });
+              }}
+              className="text-sm text-primary hover:underline"
+            >
+              {isLogin 
+                ? "Don't have an account? Sign up" 
+                : "Already have an account? Sign in"
+              }
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => {
+                setShowForgotPassword(false);
+                setErrors({});
+                setFormData({ email: '', password: '', fullName: '', confirmPassword: '' });
+              }}
+              className="text-sm text-primary hover:underline"
+            >
+              Back to sign in
+            </button>
+          )}
         </div>
 
-        {isLogin && (
+        {isLogin && !showForgotPassword && (
           <div className="mt-2 text-center">
             <button
               type="button"
               className="text-sm text-muted-foreground hover:text-primary hover:underline"
               onClick={() => {
-                toast({
-                  title: "Password Reset",
-                  description: "Password reset functionality will be implemented soon.",
-                });
+                setShowForgotPassword(true);
+                setErrors({});
               }}
             >
               Forgot your password?

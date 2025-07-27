@@ -15,6 +15,38 @@ export const profileService = {
       .eq('id', user.id)
       .single();
 
+    if (error) {
+      // If profile doesn't exist, create one
+      if (error.code === 'PGRST116') {
+        try {
+          const newProfile = await this.createProfile(user);
+          return newProfile;
+        } catch (createError) {
+          console.error('Error creating profile:', createError);
+          throw createError;
+        }
+      }
+      throw error;
+    }
+    return data;
+  },
+
+  async createProfile(user: any) {
+    const profileData = {
+      id: user.id,
+      email: user.email,
+      full_name: user.user_metadata?.full_name || 'New User',
+      role: 'patient' as const,
+      avatar_url: user.user_metadata?.avatar_url || null,
+      preferred_language: 'en',
+    };
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert(profileData)
+      .select()
+      .single();
+
     if (error) throw error;
     return data;
   },
@@ -239,7 +271,7 @@ export const medicationService = {
       .insert({
         medication_id: medicationId,
         user_id: user.id,
-        scheduled_time: takenAt || new Date().toISOString(),
+        scheduled_time: takenAt ? takenAt.toISOString() : new Date().toISOString(),
         taken_at: new Date().toISOString(),
         was_taken: true
       })
@@ -341,11 +373,12 @@ export const hospitalService = {
   },
 
   async getNearbyHospitals(latitude: number, longitude: number, radiusKm = 50) {
-    const { data, error } = await supabase.rpc('hospitals_within_radius', {
-      lat: latitude,
-      lng: longitude,
-      radius_km: radiusKm
-    });
+    // Since the RPC function doesn't exist, we'll return all hospitals for now
+    // TODO: Implement proper geospatial filtering when the RPC function is created
+    const { data, error } = await supabase
+      .from('hospitals')
+      .select('*')
+      .order('rating', { ascending: false });
 
     if (error) throw error;
     return data;
