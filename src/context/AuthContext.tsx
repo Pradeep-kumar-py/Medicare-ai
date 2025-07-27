@@ -40,19 +40,34 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      // Set a timeout to prevent hanging
-      const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000)
-      );
-      
-      const profilePromise = profileService.getCurrentProfile();
-      
-      const profile = await Promise.race([profilePromise, timeoutPromise]);
-      setProfile(profile as any);
+      const profile = await profileService.getCurrentProfile();
+      setProfile(profile);
     } catch (error) {
       console.error('Error fetching profile:', error);
-      // Don't block auth flow if profile fetch fails
-      setProfile(null);
+      // If profile doesn't exist, create a minimal profile object
+      // This prevents auth flow from breaking
+      const minimalProfile: Profile = {
+        id: userId,
+        email: '',
+        full_name: null,
+        avatar_url: null,
+        role: 'patient',
+        phone: null,
+        date_of_birth: null,
+        gender: null,
+        address: null,
+        emergency_contact_name: null,
+        emergency_contact_phone: null,
+        medical_history: null,
+        allergies: null,
+        current_medications: null,
+        insurance_provider: null,
+        insurance_policy_number: null,
+        preferred_language: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      };
+      setProfile(minimalProfile);
     }
   };
 
@@ -115,10 +130,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setProfile(null);
       }
       
-      // Only set loading to false if we haven't already
-      if (loading) {
-        setLoading(false);
-      }
+      setLoading(false);
     });
 
     return () => {
@@ -129,13 +141,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Attempting sign in for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
       
+      console.log('Sign in successful:', data.user?.email);
       return { user: data.user, error: null };
     } catch (error) {
       console.error('Sign in error:', error);
@@ -145,6 +162,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
+      console.log('Attempting sign up for:', email);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -153,8 +171,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Sign up error:', error);
+        throw error;
+      }
       
+      console.log('Sign up successful:', data.user?.email);
       return { user: data.user, error: null };
     } catch (error) {
       console.error('Sign up error:', error);

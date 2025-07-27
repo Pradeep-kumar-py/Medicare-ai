@@ -5,13 +5,10 @@ import type { Database } from './types';
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Validate environment variables (disabled to prevent runtime crash)
-if (!SUPABASE_URL) {
-  console.warn('VITE_SUPABASE_URL is not set; Supabase client may not initialize correctly');
-}
-
-if (!SUPABASE_PUBLISHABLE_KEY) {
-  console.warn('VITE_SUPABASE_ANON_KEY is not set; Supabase client may not initialize correctly');
+if (!SUPABASE_URL || !SUPABASE_PUBLISHABLE_KEY) {
+  throw new Error(
+    'Missing environment variables. Please check your .env file for VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY'
+  );
 }
 
 // Import the supabase client like this:
