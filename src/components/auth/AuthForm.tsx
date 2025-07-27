@@ -102,9 +102,20 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         const { user, error } = await signIn(formData.email, formData.password);
         
         if (error) {
+          let errorMessage = "Invalid email or password";
+          if (error.message) {
+            if (error.message.includes("Invalid login credentials")) {
+              errorMessage = "Invalid email or password. Please check your credentials.";
+            } else if (error.message.includes("Email not confirmed")) {
+              errorMessage = "Please check your email and click the confirmation link.";
+            } else {
+              errorMessage = error.message;
+            }
+          }
+          
           toast({
             title: "Sign In Failed",
-            description: error.message || "Invalid email or password",
+            description: errorMessage,
             variant: "destructive",
           });
         } else if (user) {
@@ -122,9 +133,20 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         );
         
         if (error) {
+          let errorMessage = "Failed to create account";
+          if (error.message) {
+            if (error.message.includes("User already registered")) {
+              errorMessage = "An account with this email already exists. Please sign in instead.";
+            } else if (error.message.includes("Password should be at least")) {
+              errorMessage = "Password should be at least 6 characters long.";
+            } else {
+              errorMessage = error.message;
+            }
+          }
+          
           toast({
             title: "Sign Up Failed",
-            description: error.message || "Failed to create account",
+            description: errorMessage,
             variant: "destructive",
           });
         } else if (user) {

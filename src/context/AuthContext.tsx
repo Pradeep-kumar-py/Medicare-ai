@@ -119,13 +119,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signIn = async (email: string, password: string) => {
     try {
+      console.log('Attempting sign in for:', email);
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        throw error;
+      }
       
+      console.log('Sign in successful:', data.user?.email);
       return { user: data.user, error: null };
     } catch (error) {
       console.error('Sign in error:', error);
@@ -135,6 +140,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
+      console.log('Attempting sign up for:', email);
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -143,8 +149,12 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         },
       });
       
-      if (error) throw error;
+      if (error) {
+        console.error('Sign up error:', error);
+        throw error;
+      }
       
+      console.log('Sign up successful:', data.user?.email);
       return { user: data.user, error: null };
     } catch (error) {
       console.error('Sign up error:', error);

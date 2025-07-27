@@ -51,6 +51,40 @@ export const profileService = {
     return data;
   },
 
+  async createDefaultProfile(userId: string) {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('No authenticated user');
+
+    const defaultProfile = {
+      id: userId,
+      email: user.email || '',
+      full_name: user.user_metadata?.full_name || null,
+      role: 'patient' as const,
+      avatar_url: null,
+      phone: null,
+      date_of_birth: null,
+      gender: null,
+      address: null,
+      emergency_contact_name: null,
+      emergency_contact_phone: null,
+      medical_history: null,
+      allergies: null,
+      current_medications: null,
+      insurance_provider: null,
+      insurance_policy_number: null,
+      preferred_language: null,
+    };
+
+    const { data, error } = await supabase
+      .from('profiles')
+      .insert(defaultProfile)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data;
+  },
+
   async updateProfile(updates: Partial<Tables['profiles']['Update']>) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('No authenticated user');
