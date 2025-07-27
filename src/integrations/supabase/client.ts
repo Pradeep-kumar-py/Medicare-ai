@@ -7,11 +7,13 @@ const SUPABASE_PUBLISHABLE_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 // Validate environment variables
 if (!SUPABASE_URL) {
-  throw new Error('VITE_SUPABASE_URL is required but not set');
+  console.error('Missing VITE_SUPABASE_URL environment variable');
+  throw new Error('VITE_SUPABASE_URL is required but not set. Please check your .env file.');
 }
 
 if (!SUPABASE_PUBLISHABLE_KEY) {
-  throw new Error('VITE_SUPABASE_ANON_KEY is required but not set');
+  console.error('Missing VITE_SUPABASE_ANON_KEY environment variable');
+  throw new Error('VITE_SUPABASE_ANON_KEY is required but not set. Please check your .env file.');
 }
 
 // Import the supabase client like this:

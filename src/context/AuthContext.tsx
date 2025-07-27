@@ -40,7 +40,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const fetchProfile = async (userId: string) => {
     try {
-      const profile = await profileService.getCurrentProfile();
+      setLoading(true);
+      // Add timeout to prevent infinite loading
+      const profilePromise = profileService.getCurrentProfile();
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
+      );
+      
+      const profile = await Promise.race([profilePromise, timeoutPromise]);
       setProfile(profile);
     } catch (error) {
       console.error('Error fetching profile:', error);
@@ -59,16 +66,33 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   useEffect(() => {
     let mounted = true;
+    let initTimeout: NodeJS.Timeout;
     
     // Get initial session
     const initializeAuth = async () => {
       try {
+        setLoading(true);
+        
+        // Add timeout for initialization
+        initTimeout = setTimeout(() => {
+          if (mounted) {
+            console.warn('Auth initialization timeout');
+            setLoading(false);
+          }
+        }, 15000);
+        
         const { data: { session }, error } = await supabase.auth.getSession();
         
         if (!mounted) return;
         
+        // Clear timeout if we get a response
+        clearTimeout(initTimeout);
+        
         if (error) {
           console.error('Session error:', error);
+          setSession(null);
+          setUser(null);
+          setProfile(null);
           setLoading(false);
           return;
         }
@@ -77,6 +101,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setUser(session?.user ?? null);
         
         if (session?.user) {
+          // Don't set loading here as fetchProfile handles it
           await fetchProfile(session.user.id);
         } else {
           setProfile(null);
@@ -85,6 +110,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       } catch (error) {
         console.error('Auth initialization error:', error);
         if (mounted) {
+          setSession(null);
+          setUser(null);
+          setProfile(null);
           setLoading(false);
         }
       }
@@ -113,6 +141,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
     return () => {
       mounted = false;
+      if (initTimeout) clearTimeout(initTimeout);
       subscription.unsubscribe();
     };
   }, []); // Remove loading dependency to prevent infinite loops

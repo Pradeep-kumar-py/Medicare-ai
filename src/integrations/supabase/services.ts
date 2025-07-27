@@ -6,29 +6,45 @@ type Tables = Database['public']['Tables'];
 // Profile functions
 export const profileService = {
   async getCurrentProfile() {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return null;
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return null;
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('id', user.id)
-      .single();
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
 
-    if (error) {
-      // If profile doesn't exist, create one
-      if (error.code === 'PGRST116') {
-        try {
-          const newProfile = await this.createProfile(user);
-          return newProfile;
-        } catch (createError) {
-          console.error('Error creating profile:', createError);
-          throw createError;
+      if (error) {
+        // If profile doesn't exist, create one
+        if (error.code === 'PGRST116') {
+          try {
+            const newProfile = await this.createProfile(user);
+            return newProfile;
+          } catch (createError) {
+            console.error('Error creating profile:', createError);
+            // Return a minimal profile object if creation fails
+            return {
+              id: user.id,
+              email: user.email,
+              full_name: user.user_metadata?.full_name || 'New User',
+              role: 'patient' as const,
+              avatar_url: user.user_metadata?.avatar_url || null,
+              preferred_language: 'en',
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            };
+          }
         }
+        console.error('Profile fetch error:', error);
+        throw error;
       }
+      return data;
+    } catch (error) {
+      console.error('Get profile error:', error);
       throw error;
     }
-    return data;
   },
 
   async createProfile(user: any) {

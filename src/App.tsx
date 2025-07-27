@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./context/LanguageContext";
 import { AuthProvider } from "./context/AuthContext";
 import { AuthErrorBoundary } from "./components/auth/AuthErrorBoundary";
+import { AuthDebugInfo } from "./components/auth/AuthDebugInfo";
 import { ThemeProvider } from "./components/ThemeProvider";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Layout from "./components/Layout";
@@ -37,6 +38,7 @@ const App = () => (
             <AuthProvider>
               <Toaster />
               <Sonner />
+              {/* <AuthDebugInfo /> */}
               <BrowserRouter>
               <Routes>
                 {/* Public routes */}
