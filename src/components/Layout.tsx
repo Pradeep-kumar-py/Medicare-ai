@@ -93,10 +93,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="w-full flex h-14 sm:h-16 items-center justify-between px-4">
           <Link to="/" className="flex  items-center space-x-2">
             <div className="h-7 w-7 sm:h-8 sm:w-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
+              {/* <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-white" /> */}
             </div>
             <span className="font-bold text-lg sm:text-xl bg-gradient-primary bg-clip-text text-transparent">
-              Vital Vue Assist
+              Medicare-ai
             </span>
           </Link>
 

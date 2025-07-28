@@ -56,102 +56,102 @@ const App = () => (
                 } />
                 
                 <Route path="/symptoms" element={
-                  <ProtectedRoute>
+
                     <Layout>
                       <SymptomChecker />
                       <Chatbot />
                     </Layout>
-                  </ProtectedRoute>
+
                 } />
                 
                 <Route path="/appointments" element={
-                  <ProtectedRoute>
+
                     <Layout>
                       <AppointmentScheduler />
                       <Chatbot />
                     </Layout>
-                  </ProtectedRoute>
+
                 } />
                 
                 <Route path="/reminders" element={
-                  <ProtectedRoute>
+
                     <Layout>
                       <MedicationReminder />
                       <Chatbot />
                     </Layout>
-                  </ProtectedRoute>
+                  
                 } />
                 
                 <Route path="/dashboard" element={
-                  <ProtectedRoute>
+
                     <Layout>
                       <HealthDashboard />
                       <Chatbot />
                     </Layout>
-                  </ProtectedRoute>
+
                 } />
                 
                 <Route path="/teleconsultation" element={
-                  <ProtectedRoute>
+
                     <Layout>
                       <Teleconsultation />
                       <Chatbot />
                     </Layout>
-                  </ProtectedRoute>
+
                 } />
                 
                 <Route path="/alerts" element={
-                  <ProtectedRoute>
+
                     <Layout>
                       <HealthAlerts />
                       <Chatbot />
                     </Layout>
-                  </ProtectedRoute>
+
                 } />
                 
                 <Route path="/trends" element={
-                  <ProtectedRoute>
+
                     <Layout>
                       <HealthTrends />
                       <Chatbot />
                     </Layout>
-                  </ProtectedRoute>
+
                 } />
                 
                 <Route path="/medicine-hub" element={
-                  <ProtectedRoute>
+
                     <Layout>
                       <MedicineHub />
                       <Chatbot />
                     </Layout>
-                  </ProtectedRoute>
+
                 } />
                 
                 <Route path="/hospital-locator" element={
-                  <ProtectedRoute>
+                  // <ProtectedRoute>
                     <Layout>
                       <HospitalLocator />
                       <Chatbot />
                     </Layout>
-                  </ProtectedRoute>
+                  // </ProtectedRoute>
                 } />
                 
                 <Route path="/insurance" element={
-                  <ProtectedRoute>
+                  // <ProtectedRoute>
                     <Layout>
                       <InsuranceSupport />
                       <Chatbot />
                     </Layout>
-                  </ProtectedRoute>
+                  // </ProtectedRoute>
                 } />
                 
                 <Route path="/profile" element={
-                  <ProtectedRoute>
+                  // <ProtectedRoute>
                     <Layout>
                       <Profile />
                       <Chatbot />
                     </Layout>
-                  </ProtectedRoute>
+                  // </ProtectedRoute>
                 } />
                 
                 <Route path="*" element={<NotFound />} />
