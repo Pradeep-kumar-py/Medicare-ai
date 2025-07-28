@@ -3,8 +3,11 @@ import { useLanguage } from '../context/LanguageContext';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Textarea } from './ui/textarea';
+import { Input } from './ui/input';
+import { Label } from './ui/label';
 import { Badge } from './ui/badge';
-import { Stethoscope, AlertCircle, Info, Thermometer, Search, Mic, MicOff, UserCheck, Calendar } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Stethoscope, AlertCircle, Info, Thermometer, Search, Mic, MicOff, UserCheck, Calendar, X, Plus } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 
 interface SuggestedCondition {
@@ -16,83 +19,49 @@ interface SuggestedCondition {
   urgency: 'routine' | 'soon' | 'urgent';
 }
 
+interface AnalysisResponse {
+  conditions: SuggestedCondition[];
+  general_advice: string;
+  emergency_warning: string;
+}
+
 const SymptomChecker: React.FC = () => {
   const { t } = useLanguage();
-  const [symptoms, setSymptoms] = useState('');
+  const [symptoms, setSymptoms] = useState<string[]>([]);
+  const [currentSymptom, setCurrentSymptom] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('');
+  const [additionalInfo, setAdditionalInfo] = useState('');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [suggestions, setSuggestions] = useState<SuggestedCondition[]>([]);
+  const [generalAdvice, setGeneralAdvice] = useState('');
+  const [emergencyWarning, setEmergencyWarning] = useState('');
   const [isListening, setIsListening] = useState(false);
 
-  // Mock conditions database
-  const mockConditions: SuggestedCondition[] = [
-    {
-      name: 'Common Cold',
-      probability: 85,
-      severity: 'low',
-      recommendations: [
-        'Rest and stay hydrated',
-        'Consider over-the-counter pain relievers',
-        'Monitor symptoms for 7-10 days'
-      ],
-      specialists: ['General Physician', 'Family Medicine'],
-      urgency: 'routine'
-    },
-    {
-      name: 'Seasonal Allergies',
-      probability: 70,
-      severity: 'low',
-      recommendations: [
-        'Take antihistamines',
-        'Avoid known allergens',
-        'Consider nasal decongestants'
-      ],
-      specialists: ['Allergist', 'ENT Specialist', 'General Physician'],
-      urgency: 'routine'
-    },
-    {
-      name: 'Viral Infection',
-      probability: 65,
-      severity: 'medium',
-      recommendations: [
-        'Get plenty of rest',
-        'Stay isolated to prevent spread',
-        'Consult doctor if symptoms worsen'
-      ],
-      specialists: ['General Physician', 'Internal Medicine'],
-      urgency: 'soon'
-    },
-    {
-      name: 'Migraine',
-      probability: 60,
-      severity: 'medium',
-      recommendations: [
-        'Rest in a dark, quiet room',
-        'Apply cold compress',
-        'Consider prescribed medications'
-      ],
-      specialists: ['Neurologist', 'General Physician'],
-      urgency: 'soon'
-    },
-    {
-      name: 'Hypertension',
-      probability: 55,
-      severity: 'high',
-      recommendations: [
-        'Monitor blood pressure regularly',
-        'Reduce sodium intake',
-        'Exercise regularly',
-        'Take prescribed medications'
-      ],
-      specialists: ['Cardiologist', 'Internal Medicine'],
-      urgency: 'urgent'
+  const addSymptom = (symptom: string) => {
+    const trimmedSymptom = symptom.trim();
+    if (trimmedSymptom && !symptoms.includes(trimmedSymptom)) {
+      setSymptoms([...symptoms, trimmedSymptom]);
+      setCurrentSymptom('');
     }
-  ];
+  };
+
+  const removeSymptom = (index: number) => {
+    setSymptoms(symptoms.filter((_, i) => i !== index));
+  };
+
+  const handleSymptomKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addSymptom(currentSymptom);
+    }
+  };
 
   const analyzeSymptoms = async () => {
-    if (!symptoms.trim()) {
+    if (symptoms.length === 0) {
       toast({
         title: "Please enter symptoms",
-        description: "Describe your symptoms to get AI-powered analysis.",
+        description: "Add at least one symptom to get AI-powered analysis.",
         variant: "destructive"
       });
       return;
@@ -100,31 +69,45 @@ const SymptomChecker: React.FC = () => {
 
     setIsAnalyzing(true);
     
-    // Simulate API call
-    setTimeout(() => {
-      // Mock analysis based on keywords
-      const relevantConditions = mockConditions.filter(condition => {
-        const keywords = symptoms.toLowerCase();
-        if (keywords.includes('headache') || keywords.includes('head')) {
-          return condition.name.includes('Migraine');
-        }
-        if (keywords.includes('fever') || keywords.includes('cold') || keywords.includes('cough')) {
-          return condition.name.includes('Cold') || condition.name.includes('Viral');
-        }
-        if (keywords.includes('sneez') || keywords.includes('itch') || keywords.includes('runny')) {
-          return condition.name.includes('Allergies');
-        }
-        return true;
-      }).slice(0, 3);
+    try {
+      const requestData = {
+        symptoms,
+        age: age ? parseInt(age) : undefined,
+        gender: gender || undefined,
+        additional_info: additionalInfo || undefined
+      };
 
-      setSuggestions(relevantConditions);
-      setIsAnalyzing(false);
+      const response = await fetch('http://localhost:8000/symptom-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Analysis failed');
+      }
+
+      const data: AnalysisResponse = await response.json();
+      
+      setSuggestions(data.conditions);
+      setGeneralAdvice(data.general_advice);
+      setEmergencyWarning(data.emergency_warning);
       
       toast({
         title: "Analysis Complete",
-        description: `Found ${relevantConditions.length} potential conditions based on your symptoms.`,
+        description: `Found ${data.conditions.length} potential conditions based on your symptoms.`,
       });
-    }, 2000);
+    } catch (error) {
+      toast({
+        title: "Analysis Failed",
+        description: "Unable to analyze symptoms. Please try again later.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsAnalyzing(false);
+    }
   };
 
   const startVoiceInput = () => {
@@ -140,7 +123,7 @@ const SymptomChecker: React.FC = () => {
 
       recognition.onresult = (event: any) => {
         const transcript = event.results[0][0].transcript;
-        setSymptoms(prev => prev + ' ' + transcript);
+        addSymptom(transcript);
         setIsListening(false);
       };
 
@@ -220,46 +203,121 @@ const SymptomChecker: React.FC = () => {
             <span>Symptom Analysis</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-6">
+          {/* Add Symptoms */}
+          <div className="space-y-3">
+            <Label htmlFor="symptomInput" className="text-sm font-medium">
+              Add Symptoms *
+            </Label>
+            <div className="flex gap-2">
+              <Input
+                id="symptomInput"
+                placeholder="e.g., headache, fever, nausea (press Enter to add)"
+                value={currentSymptom}
+                onChange={(e) => setCurrentSymptom(e.target.value)}
+                onKeyPress={handleSymptomKeyPress}
+                className="flex-1"
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addSymptom(currentSymptom)}
+                disabled={!currentSymptom.trim()}
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={startVoiceInput}
+                disabled={isListening}
+              >
+                {isListening ? (
+                  <MicOff className="h-4 w-4 text-destructive" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
+            
+            {/* Symptom Tags */}
+            {symptoms.length > 0 && (
+              <div className="flex flex-wrap gap-2 p-3 bg-muted/30 rounded-lg">
+                {symptoms.map((symptom, index) => (
+                  <Badge
+                    key={index}
+                    variant="secondary"
+                    className="px-3 py-1 text-sm flex items-center gap-2"
+                  >
+                    {symptom}
+                    <button
+                      onClick={() => removeSymptom(index)}
+                      className="hover:bg-destructive/20 rounded-full p-0.5"
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </Badge>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Age Input */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Describe your symptoms</label>
+            <Label htmlFor="patientAge" className="text-sm font-medium">
+              Age (optional)
+            </Label>
+            <Input
+              id="patientAge"
+              type="number"
+              placeholder="e.g., 35"
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              min="1"
+              max="120"
+            />
+          </div>
+
+          {/* Gender Selection */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Gender (optional)</Label>
+            <Select value={gender} onValueChange={setGender}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select gender" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="male">Male</SelectItem>
+                <SelectItem value="female">Female</SelectItem>
+                <SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Additional Information */}
+          <div className="space-y-2">
+            <Label htmlFor="additionalInfo" className="text-sm font-medium">
+              Additional Information (optional)
+            </Label>
             <Textarea
-              placeholder={t('enterSymptoms')}
-              value={symptoms}
-              onChange={(e) => setSymptoms(e.target.value)}
-              className="min-h-[120px] resize-none"
+              id="additionalInfo"
+              placeholder="Any additional details about your symptoms, duration, severity, etc."
+              value={additionalInfo}
+              onChange={(e) => setAdditionalInfo(e.target.value)}
+              className="min-h-[80px] resize-none"
             />
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3">
-            <Button
-              onClick={analyzeSymptoms}
-              disabled={isAnalyzing}
-              className="flex-1"
-            >
-              <Search className="h-4 w-4 mr-2" />
-              {isAnalyzing ? t('loading') : t('checkSymptoms')}
-            </Button>
-            
-            <Button
-              variant="outline"
-              onClick={startVoiceInput}
-              disabled={isListening}
-              className="flex items-center space-x-2"
-            >
-              {isListening ? (
-                <>
-                  <MicOff className="h-4 w-4 text-destructive" />
-                  <span>Listening...</span>
-                </>
-              ) : (
-                <>
-                  <Mic className="h-4 w-4" />
-                  <span>Voice Input</span>
-                </>
-              )}
-            </Button>
-          </div>
+          {/* Analyze Button */}
+          <Button
+            onClick={analyzeSymptoms}
+            disabled={isAnalyzing || symptoms.length === 0}
+            className="w-full"
+            size="lg"
+          >
+            <Search className="h-4 w-4 mr-2" />
+            {isAnalyzing ? 'Analyzing symptoms...' : '🔍 Analyze Symptoms'}
+          </Button>
         </CardContent>
       </Card>
 
@@ -267,6 +325,36 @@ const SymptomChecker: React.FC = () => {
       {suggestions.length > 0 && (
         <div className="max-w-4xl mx-auto space-y-6">
           <h2 className="text-2xl font-bold text-center">{t('suggestedConditions')}</h2>
+          
+          {/* General Advice */}
+          {generalAdvice && (
+            <Card className="bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-800">
+              <CardContent className="pt-6">
+                <div className="flex items-start space-x-3">
+                  <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">General Advice</h4>
+                    <p className="text-sm text-blue-800 dark:text-blue-200">{generalAdvice}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Emergency Warning */}
+          {emergencyWarning && (
+            <Card className="bg-red-50 border-red-200 dark:bg-red-950/20 dark:border-red-800">
+              <CardContent className="pt-6">
+                <div className="flex items-start space-x-3">
+                  <AlertCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                  <div>
+                    <h4 className="font-semibold text-red-900 dark:text-red-100 mb-2">⚠️ Emergency Warning</h4>
+                    <p className="text-sm text-red-800 dark:text-red-200">{emergencyWarning}</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
           
           <div className="grid gap-4 sm:gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
             {suggestions.map((condition, index) => (

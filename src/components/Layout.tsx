@@ -45,13 +45,13 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { path: '/symptoms', icon: Stethoscope, label: t('symptoms') },
     { path: '/appointments', icon: Calendar, label: t('appointments') },
     { path: '/reminders', icon: Pill, label: t('reminders') },
-    { path: '/dashboard', icon: BarChart3, label: t('dashboard') },
+    // { path: '/dashboard', icon: BarChart3, label: t('dashboard') },
     { path: '/teleconsultation', icon: Video, label: t('teleconsultation') },
     { path: '/alerts', icon: AlertTriangle, label: t('alerts') },
-    { path: '/trends', icon: TrendingUp, label: t('trends') },
+    // { path: '/trends', icon: TrendingUp, label: t('trends') },
     { path: '/medicine-hub', icon: ShoppingCart, label: 'Medicine Hub' },
     { path: '/hospital-locator', icon: MapPin, label: 'Hospitals' },
-    { path: '/insurance', icon: Shield, label: 'Insurance' },
+    // { path: '/insurance', icon: Shield, label: 'Insurance' },
   ];
 
   const toggleLanguage = () => {

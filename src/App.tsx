@@ -45,7 +45,7 @@ const App = () => (
                 <Route path="/auth" element={<AuthPage />} />
                 <Route path="/reset-password" element={<PasswordResetPage />} />
                 
-                {/* Protected routes */}
+                {/* Demo-friendly routes - minimal protection for hackathon */}
                 <Route path="/" element={
                   <ProtectedRoute>
                     <Layout>
@@ -56,102 +56,82 @@ const App = () => (
                 } />
                 
                 <Route path="/symptoms" element={
-
-                    <Layout>
-                      <SymptomChecker />
-                      <Chatbot />
-                    </Layout>
-
+                  <Layout>
+                    <SymptomChecker />
+                    <Chatbot />
+                  </Layout>
                 } />
                 
                 <Route path="/appointments" element={
-
-                    <Layout>
-                      <AppointmentScheduler />
-                      <Chatbot />
-                    </Layout>
-
+                  <Layout>
+                    <AppointmentScheduler />
+                    <Chatbot />
+                  </Layout>
                 } />
                 
                 <Route path="/reminders" element={
-
-                    <Layout>
-                      <MedicationReminder />
-                      <Chatbot />
-                    </Layout>
-                  
+                  <Layout>
+                    <MedicationReminder />
+                    <Chatbot />
+                  </Layout>
                 } />
                 
-                <Route path="/dashboard" element={
-
-                    <Layout>
-                      <HealthDashboard />
-                      <Chatbot />
-                    </Layout>
-
-                } />
+                {/* <Route path="/dashboard" element={
+                  <Layout>
+                    <HealthDashboard />
+                    <Chatbot />
+                  </Layout>
+                } /> */}
                 
                 <Route path="/teleconsultation" element={
-
-                    <Layout>
-                      <Teleconsultation />
-                      <Chatbot />
-                    </Layout>
-
+                  <Layout>
+                    <Teleconsultation />
+                    <Chatbot />
+                  </Layout>
                 } />
                 
                 <Route path="/alerts" element={
-
-                    <Layout>
-                      <HealthAlerts />
-                      <Chatbot />
-                    </Layout>
-
+                  <Layout>
+                    <HealthAlerts />
+                    <Chatbot />
+                  </Layout>
                 } />
-                
+{/*                 
                 <Route path="/trends" element={
-
-                    <Layout>
-                      <HealthTrends />
-                      <Chatbot />
-                    </Layout>
-
-                } />
+                  <Layout>
+                    <HealthTrends />
+                    <Chatbot />
+                  </Layout>
+                } /> */}
                 
                 <Route path="/medicine-hub" element={
-
-                    <Layout>
-                      <MedicineHub />
-                      <Chatbot />
-                    </Layout>
-
+                  <Layout>
+                    <MedicineHub />
+                    <Chatbot />
+                  </Layout>
                 } />
                 
                 <Route path="/hospital-locator" element={
-                  // <ProtectedRoute>
-                    <Layout>
-                      <HospitalLocator />
-                      <Chatbot />
-                    </Layout>
-                  // </ProtectedRoute>
+                  <Layout>
+                    <HospitalLocator />
+                    <Chatbot />
+                  </Layout>
                 } />
                 
-                <Route path="/insurance" element={
-                  // <ProtectedRoute>
-                    <Layout>
-                      <InsuranceSupport />
-                      <Chatbot />
-                    </Layout>
-                  // </ProtectedRoute>
-                } />
+                {/* <Route path="/insurance" element={
+                  <Layout>
+                    <InsuranceSupport />
+                    <Chatbot />
+                  </Layout>
+                } /> */}
                 
                 <Route path="/profile" element={
-                  // <ProtectedRoute>
+                  <ProtectedRoute>
                     <Layout>
                       <Profile />
                       <Chatbot />
                     </Layout>
-                  // </ProtectedRoute>
+                  </ProtectedRoute>
                 } />
                 
                 <Route path="*" element={<NotFound />} />
