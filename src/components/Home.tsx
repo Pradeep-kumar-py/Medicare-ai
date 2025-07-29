@@ -5,6 +5,7 @@ import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { 
   Heart, 
+  Hospital,
   Stethoscope, 
   Calendar, 
   Pill, 
@@ -81,7 +82,7 @@ const Home: React.FC = () => {
       <section className="bg-gradient-to-r from-primary to-secondary py-12 sm:py-16 md:py-20 text-white">
         <div className="container text-center space-y-4 sm:space-y-6 md:space-y-8 px-4">
 <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-card/20 rounded-full mb-4 sm:mb-6 md:mb-8">
-            <Heart className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" />
+            <Hospital className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" />
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight px-2">
             {t('welcomeTitle')}
@@ -144,7 +145,7 @@ const Home: React.FC = () => {
           <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8">
             <div className="space-y-3 sm:space-y-4">
               <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full mb-3 sm:mb-4">
-                <HandHeart className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                <Hospital className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold px-2">Support Healthcare for Everyone</h2>
               <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
@@ -237,7 +238,7 @@ const Home: React.FC = () => {
           <div className="grid gap-6 sm:gap-8 grid-cols-2 md:grid-cols-4 text-center">
             {[
               { icon: Users, label: 'Active Users', value: '50K+' },
-              { icon: Heart, label: 'Health Assessments', value: '200K+' },
+              { icon: Hospital, label: 'Health Assessments', value: '200K+' },
               { icon: CheckCircle, label: 'Appointments Booked', value: '75K+' },
               { icon: Shield, label: 'Accuracy Rate', value: '95%' }
             ].map((stat, index) => {

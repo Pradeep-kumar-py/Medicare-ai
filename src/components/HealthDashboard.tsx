@@ -5,7 +5,8 @@ import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { 
   BarChart3, 
-  Heart, 
+  Heart,
+  Hospital, 
   Activity, 
   Calendar, 
   TrendingUp, 
@@ -75,7 +76,7 @@ const HealthDashboard: React.FC = () => {
       status: 'normal',
       trend: 'stable',
       lastUpdated: '2 hours ago',
-      icon: Heart
+      icon: Hospital
     },
     {
       id: '2',

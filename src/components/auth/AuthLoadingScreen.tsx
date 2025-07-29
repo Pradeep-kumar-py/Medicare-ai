@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '../ui/card';
-import { Loader2, Heart, AlertCircle } from 'lucide-react';
+import { Loader2, Heart, Hospital, AlertCircle } from 'lucide-react';
 import { Button } from '../ui/button';
 
 interface AuthLoadingScreenProps {
@@ -27,7 +27,7 @@ export const AuthLoadingScreen: React.FC<AuthLoadingScreenProps> = ({ timeout = 
       <Card className="w-full max-w-md border-0 shadow-lg">
         <CardContent className="flex flex-col items-center justify-center p-8 space-y-6">
           <div className="relative">
-            <Heart className="h-12 w-12 text-primary fill-current" />
+            <Hospital className="h-12 w-12 text-primary fill-current" />
             <div className="absolute -top-1 -right-1">
               {showTimeout ? (
                 <AlertCircle className="h-6 w-6 text-yellow-500" />
