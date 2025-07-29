@@ -46,7 +46,7 @@ const MedicineHub: React.FC = () => {
       rating: 4.3,
       inStock: true,
       store: 'Netmeds',
-      storeUrl: 'https://netmeds.com/search?query=crocin%20advance',
+      storeUrl: 'https://www.netmeds.com/catalogsearch/result/crocin%20advance/all',
       prescription: false
     },
     {
@@ -70,7 +70,7 @@ const MedicineHub: React.FC = () => {
       rating: 4.2,
       inStock: true,
       store: 'Apollo Pharmacy',
-      storeUrl: 'https://apollopharmacy.in/search/all?name=Cetirizine%2010mg',
+      storeUrl: 'https://www.apollopharmacy.in/search-medicines/Cetirizine%2010mg',
       prescription: false
     },
     {
@@ -94,7 +94,7 @@ const MedicineHub: React.FC = () => {
       rating: 4.3,
       inStock: true,
       store: 'Netmeds',
-      storeUrl: 'https://netmeds.com/search?query=omeprazole%2020mg',
+      storeUrl: 'https://www.netmeds.com/catalogsearch/result/omeprazole%2020mg/all',
       prescription: false
     }
   ];
