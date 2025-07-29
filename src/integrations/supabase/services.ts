@@ -169,6 +169,22 @@ export const appointmentService = {
 
     if (error) throw error;
     return data;
+  },
+
+  async getDoctorAppointments(doctorId: string) {
+    const { data, error } = await supabase
+      .from('appointments')
+      .select(`
+        *,
+        patient:profiles!appointments_patient_id_fkey(full_name, email)
+      `)
+      .eq('doctor_id', doctorId)
+      .gte('appointment_date', new Date().toISOString().split('T')[0])
+      .order('appointment_date', { ascending: true })
+      .order('appointment_time', { ascending: true });
+
+    if (error) throw error;
+    return data;
   }
 };
 

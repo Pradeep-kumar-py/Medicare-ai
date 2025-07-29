@@ -61,6 +61,17 @@ const DoctorDashboard: React.FC = () => {
     }
   }, [user, profile]);
 
+  useEffect(() => {
+    // Refresh data every 30 seconds to catch new appointments
+    const interval = setInterval(() => {
+      if (user && profile?.role === 'doctor') {
+        fetchDoctorData();
+      }
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [user, profile]);
+
   const fetchDoctorData = async () => {
     try {
       setLoading(true);
@@ -80,7 +91,7 @@ const DoctorDashboard: React.FC = () => {
       setDoctorProfile(doctorData);
       setIsOnline(doctorData.is_available);
 
-      // Fetch appointments
+      // Fetch appointments with better error handling
       const { data: appointmentData, error: appointmentError } = await supabase
         .from('appointments')
         .select(`
@@ -94,22 +105,24 @@ const DoctorDashboard: React.FC = () => {
 
       if (appointmentError) {
         console.error('Error fetching appointments:', appointmentError);
-        return;
+        // Don't throw error, just log it and continue with empty appointments
+        setAppointments([]);
+      } else {
+        const formattedAppointments = (appointmentData || []).map(apt => ({
+          id: apt.id,
+          patient_name: apt.patient?.full_name || 'Unknown Patient',
+          patient_email: apt.patient?.email || '',
+          appointment_date: apt.appointment_date,
+          appointment_time: apt.appointment_time,
+          status: apt.status as 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show',
+          reason: apt.reason || '',
+          symptoms: apt.symptoms || '',
+          consultation_type: (apt.appointment_type === 'teleconsultation' ? 'video' : 'in-person') as 'video' | 'phone' | 'in-person'
+        }));
+
+        setAppointments(formattedAppointments);
+        console.log(`Loaded ${formattedAppointments.length} appointments for doctor`);
       }
-
-      const formattedAppointments = appointmentData.map(apt => ({
-        id: apt.id,
-        patient_name: apt.patient?.full_name || 'Unknown Patient',
-        patient_email: apt.patient?.email || '',
-        appointment_date: apt.appointment_date,
-        appointment_time: apt.appointment_time,
-        status: apt.status as 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show',
-        reason: apt.reason || '',
-        symptoms: apt.symptoms || '',
-        consultation_type: (apt.appointment_type === 'teleconsultation' ? 'video' : 'in-person') as 'video' | 'phone' | 'in-person'
-      }));
-
-      setAppointments(formattedAppointments);
 
       // Fetch teleconsultation data (call counts)
       const { data: teleconsultationData, error: teleconsultationError } = await supabase
@@ -147,6 +160,8 @@ const DoctorDashboard: React.FC = () => {
   };
 
   const setupRealtimeSubscription = () => {
+    if (!doctorProfile) return;
+
     // Subscribe to new appointments
     const appointmentSubscription = supabase
       .channel('doctor-appointments')
@@ -156,7 +171,7 @@ const DoctorDashboard: React.FC = () => {
           event: '*',
           schema: 'public',
           table: 'appointments',
-          filter: `doctor_id=eq.${doctorProfile?.id}`
+          filter: `doctor_id=eq.${doctorProfile.id}`
         },
         (payload) => {
           console.log('New appointment update:', payload);
@@ -164,8 +179,13 @@ const DoctorDashboard: React.FC = () => {
           
           if (payload.eventType === 'INSERT') {
             toast({
-              title: "New Appointment",
-              description: "You have a new appointment booking!",
+              title: "New Appointment!",
+              description: "You have a new appointment booking. Check your dashboard for details.",
+            });
+          } else if (payload.eventType === 'UPDATE') {
+            toast({
+              title: "Appointment Updated",
+              description: "An appointment has been updated.",
             });
           }
         }
@@ -385,16 +405,37 @@ const DoctorDashboard: React.FC = () => {
       {/* Appointments List */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Upcoming Appointments
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Upcoming Appointments ({appointments.length})
+            </CardTitle>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={fetchDoctorData}
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+              ) : (
+                'Refresh'
+              )}
+            </Button>
+          </div>
         </CardHeader>
         <CardContent>
           {appointments.length === 0 ? (
-            <div className="text-center py-8">
-              <Calendar className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground">No upcoming appointments</p>
+            <div className="text-center py-12">
+              <Calendar className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No upcoming appointments</h3>
+              <p className="text-muted-foreground mb-4">
+                Patients can book appointments with you through the appointment scheduler.
+              </p>
+              <div className="text-sm text-muted-foreground">
+                <p>✅ Your profile is {doctorProfile.is_available ? 'available' : 'not available'} for bookings</p>
+                <p>📝 Make sure your availability status is turned on to receive bookings</p>
+              </div>
             </div>
           ) : (
             <div className="space-y-4">
@@ -411,13 +452,21 @@ const DoctorDashboard: React.FC = () => {
                     </Avatar>
                     
                     <div className="space-y-1">
-                      <p className="font-medium">{appointment.patient_name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium">{appointment.patient_name}</p>
+                        <Badge variant="outline" className="text-xs">
+                          {appointment.consultation_type === 'video' ? 'Video' : 'In-Person'}
+                        </Badge>
+                      </div>
                       <p className="text-sm text-muted-foreground">{appointment.patient_email}</p>
                       <p className="text-sm text-muted-foreground">
-                        {new Date(appointment.appointment_date).toLocaleDateString()} at {appointment.appointment_time}
+                        📅 {new Date(appointment.appointment_date).toLocaleDateString()} at ⏰ {appointment.appointment_time}
                       </p>
                       {appointment.reason && (
-                        <p className="text-sm text-muted-foreground">Reason: {appointment.reason}</p>
+                        <p className="text-sm text-muted-foreground">💬 Reason: {appointment.reason}</p>
+                      )}
+                      {appointment.symptoms && (
+                        <p className="text-sm text-muted-foreground">🩺 Symptoms: {appointment.symptoms}</p>
                       )}
                     </div>
                   </div>

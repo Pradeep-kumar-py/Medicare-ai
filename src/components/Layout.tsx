@@ -49,7 +49,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { path: '/reminders', icon: Pill, label: t('reminders') },
     { path: '/teleconsultation', icon: Video, label: t('teleconsultation') },
     { path: '/alerts', icon: AlertTriangle, label: t('alerts') },
-    { path: '/hospitals', icon: MapPin, label: t('hospitals') },
+    { path: '/hospital-locator', icon: MapPin, label: t('hospitals') },
     { path: '/medicine-hub', icon: ShoppingCart, label: t('medicineHub') },
   ];
 

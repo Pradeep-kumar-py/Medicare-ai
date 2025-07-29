@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Calendar, Clock, User, MapPin, CheckCircle, Video } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, CheckCircle, Video, Star } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { toast } from '../hooks/use-toast';
 import { appointmentService, doctorService } from '../integrations/supabase/services';
@@ -24,6 +25,7 @@ interface TimeSlot {
 
 const AppointmentScheduler: React.FC = () => {
   const { t } = useLanguage();
+  const { user, profile } = useAuth();
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
@@ -31,9 +33,20 @@ const AppointmentScheduler: React.FC = () => {
   const [step, setStep] = useState<'doctor' | 'datetime' | 'confirm'>('doctor');
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bookingLoading, setBookingLoading] = useState(false);
 
   useEffect(() => {
     fetchDoctors();
+  }, []);
+
+  useEffect(() => {
+    // Log any potential errors for debugging
+    const handleError = (event: ErrorEvent) => {
+      console.error('AppointmentScheduler error:', event.error);
+    };
+
+    window.addEventListener('error', handleError);
+    return () => window.removeEventListener('error', handleError);
   }, []);
 
   const fetchDoctors = async () => {
@@ -42,7 +55,6 @@ const AppointmentScheduler: React.FC = () => {
       console.log('Starting to fetch doctors from database...');
       
       const dbDoctors = await doctorService.getDoctors();
-      
       console.log('Raw doctors data from database:', dbDoctors);
       
       // Transform database doctors to match our interface
@@ -53,58 +65,44 @@ const AppointmentScheduler: React.FC = () => {
         rating: doctor.rating || 4.5,
         experience: doctor.experience_years ? `${doctor.experience_years} years` : '5+ years',
         image: index % 2 === 0 ? '👩‍⚕️' : '👨‍⚕️',
-        nextAvailable: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] // tomorrow
+        nextAvailable: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
       }));
 
-      console.log('Transformed doctors for UI:', transformedDoctors);
+      // Add some demo doctors for better experience
+      const mockDoctors: Doctor[] = [
+        {
+          id: 'mock-1',
+          name: 'Dr. Sarah Johnson',
+          specialization: 'General Physician',
+          rating: 4.8,
+          experience: '12 years',
+          image: '👩‍⚕️',
+          nextAvailable: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        },
+        {
+          id: 'mock-2',
+          name: 'Dr. Michael Chen',
+          specialization: 'Cardiologist',
+          rating: 4.9,
+          experience: '15 years',
+          image: '👨‍⚕️',
+          nextAvailable: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        },
+        {
+          id: 'mock-3',
+          name: 'Dr. Emily Rodriguez',
+          specialization: 'Dermatologist',
+          rating: 4.7,
+          experience: '8 years',
+          image: '👩‍⚕️',
+          nextAvailable: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+        }
+      ];
 
-      // If no doctors in database, use mock data
-      if (transformedDoctors.length === 0) {
-        console.log('No doctors found in database, using mock data');
-        const mockDoctors: Doctor[] = [
-          {
-            id: 'mock-1',
-            name: 'Dr. Sarah Johnson',
-            specialization: 'General Physician',
-            rating: 4.8,
-            experience: '12 years',
-            image: '👩‍⚕️',
-            nextAvailable: '2024-01-15'
-          },
-          {
-            id: 'mock-2',
-            name: 'Dr. Michael Chen',
-            specialization: 'Cardiologist',
-            rating: 4.9,
-            experience: '15 years',
-            image: '👨‍⚕️',
-            nextAvailable: '2024-01-16'
-          },
-          {
-            id: 'mock-3',
-            name: 'Dr. Emily Rodriguez',
-            specialization: 'Dermatologist',
-            rating: 4.7,
-            experience: '8 years',
-            image: '👩‍⚕️',
-            nextAvailable: '2024-01-15'
-          },
-          {
-            id: 'mock-4',
-            name: 'Dr. James Wilson',
-            specialization: 'Pediatrician',
-            rating: 4.9,
-            experience: '20 years',
-            image: '👨‍⚕️',
-            nextAvailable: '2024-01-17'
-          }
-        ];
-        setDoctors(mockDoctors);
-        console.log('Using mock doctors:', mockDoctors);
-      } else {
-        setDoctors(transformedDoctors);
-        console.log('Using database doctors, count:', transformedDoctors.length);
-      }
+      // Combine real and demo doctors
+      const allDoctors = [...transformedDoctors, ...mockDoctors];
+      setDoctors(allDoctors);
+      console.log('Total doctors available:', allDoctors.length, 'Real:', transformedDoctors.length, 'Demo:', mockDoctors.length);
     } catch (error) {
       console.error('Error fetching doctors:', error);
       toast({
@@ -113,7 +111,7 @@ const AppointmentScheduler: React.FC = () => {
         variant: "destructive"
       });
       
-      // Fallback to mock data on error
+      // Fallback to demo data
       const fallbackDoctors: Doctor[] = [
         {
           id: 'fallback-1',
@@ -122,64 +120,23 @@ const AppointmentScheduler: React.FC = () => {
           rating: 4.5,
           experience: '10 years',
           image: '👩‍⚕️',
-          nextAvailable: '2024-01-15'
+          nextAvailable: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0]
         }
       ];
       setDoctors(fallbackDoctors);
-      console.log('Using fallback doctors due to error');
     } finally {
       setLoading(false);
     }
   };
 
-  // Mock doctors data
-  const mockDoctors: Doctor[] = [
-    {
-      id: '1',
-      name: 'Dr. Sarah Johnson',
-      specialization: 'General Physician',
-      rating: 4.8,
-      experience: '12 years',
-      image: '👩‍⚕️',
-      nextAvailable: '2024-01-15'
-    },
-    {
-      id: '2',
-      name: 'Dr. Michael Chen',
-      specialization: 'Cardiologist',
-      rating: 4.9,
-      experience: '15 years',
-      image: '👨‍⚕️',
-      nextAvailable: '2024-01-16'
-    },
-    {
-      id: '3',
-      name: 'Dr. Emily Rodriguez',
-      specialization: 'Dermatologist',
-      rating: 4.7,
-      experience: '8 years',
-      image: '👩‍⚕️',
-      nextAvailable: '2024-01-15'
-    },
-    {
-      id: '4',
-      name: 'Dr. James Wilson',
-      specialization: 'Pediatrician',
-      rating: 4.9,
-      experience: '20 years',
-      image: '👨‍⚕️',
-      nextAvailable: '2024-01-17'
-    }
-  ];
-
-  // Generate available dates (next 14 days)
+  // Generate available dates (next 14 days, excluding weekends)
   const getAvailableDates = () => {
     const dates = [];
     const today = new Date();
     for (let i = 1; i <= 14; i++) {
       const date = new Date(today);
       date.setDate(today.getDate() + i);
-      // Skip weekends for this demo
+      // Skip weekends
       if (date.getDay() !== 0 && date.getDay() !== 6) {
         dates.push(date.toISOString().split('T')[0]);
       }
@@ -219,39 +176,43 @@ const AppointmentScheduler: React.FC = () => {
       return;
     }
 
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to book an appointment.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     try {
-      // For mock doctors, create a simulated booking
-      if (selectedDoctor.id.startsWith('mock-')) {
+      setBookingLoading(true);
+
+      // Check if it's a mock doctor or real doctor
+      if (selectedDoctor.id.startsWith('mock-') || selectedDoctor.id.startsWith('fallback-')) {
         toast({
           title: "Demo Appointment Booked!",
-          description: `Your demo appointment with ${selectedDoctor.name} is confirmed for ${selectedDate} at ${selectedTime}. In a real application, this would be saved to the database.`,
+          description: `Your demo appointment with ${selectedDoctor.name} is confirmed for ${selectedDate} at ${selectedTime}. This is a demonstration booking.`,
         });
+      } else {
+        // Book with real doctor
+        const appointmentData = {
+          patient_id: user.id,
+          doctor_id: selectedDoctor.id,
+          appointment_date: selectedDate,
+          appointment_time: selectedTime,
+          appointment_type: appointmentType === 'teleconsultation' ? 'teleconsultation' : 'consultation',
+          reason: 'General consultation',
+          status: 'scheduled' as const
+        };
+
+        await appointmentService.createAppointment(appointmentData);
         
-        // Reset form
-        setSelectedDoctor(null);
-        setSelectedDate('');
-        setSelectedTime('');
-        setStep('doctor');
-        return;
+        toast({
+          title: "Appointment Confirmed!",
+          description: `Your ${appointmentType === 'teleconsultation' ? 'teleconsultation' : 'appointment'} with ${selectedDoctor.name} is confirmed for ${selectedDate} at ${selectedTime}.`,
+        });
       }
-
-      // For real doctors, save to database
-      const appointmentData = {
-        patient_id: '', // Will be overridden by the service
-        doctor_id: selectedDoctor.id,
-        appointment_date: selectedDate,
-        appointment_time: selectedTime,
-        appointment_type: appointmentType === 'teleconsultation' ? 'teleconsultation' : 'consultation',
-        reason: 'General consultation',
-        status: 'scheduled' as const
-      };
-
-      await appointmentService.createAppointment(appointmentData);
-      
-      toast({
-        title: "Appointment Confirmed!",
-        description: `Your ${appointmentType === 'teleconsultation' ? 'teleconsultation' : 'appointment'} with ${selectedDoctor.name} is confirmed for ${selectedDate} at ${selectedTime}.`,
-      });
       
       // Reset form
       setSelectedDoctor(null);
@@ -265,6 +226,8 @@ const AppointmentScheduler: React.FC = () => {
         description: "Unable to book the appointment. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setBookingLoading(false);
     }
   };
 
@@ -276,6 +239,36 @@ const AppointmentScheduler: React.FC = () => {
       day: 'numeric' 
     });
   };
+
+  const renderStars = (rating: number) => {
+    return Array.from({ length: 5 }).map((_, i) => (
+      <Star 
+        key={i} 
+        className={`h-4 w-4 ${i < Math.floor(rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-300'}`} 
+      />
+    ));
+  };
+
+  if (!user) {
+    return (
+      <div className="container py-8">
+        <Card>
+          <CardContent className="pt-6">
+            <div className="text-center space-y-4">
+              <User className="h-12 w-12 text-muted-foreground mx-auto" />
+              <h2 className="text-xl font-semibold">Login Required</h2>
+              <p className="text-muted-foreground">
+                Please log in to book an appointment with our doctors.
+              </p>
+              <Button onClick={() => window.location.href = '/auth'}>
+                Login / Sign Up
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="container py-8 space-y-8">
@@ -296,7 +289,7 @@ const AppointmentScheduler: React.FC = () => {
           {['doctor', 'datetime', 'confirm'].map((stepName, index) => (
             <div key={stepName} className="flex items-center">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium
-                ${step === stepName || ['datetime', 'confirm'].includes(step) && index < 2 || step === 'confirm' && index < 3
+                ${step === stepName || (['datetime', 'confirm'].includes(step) && index < 2) || (step === 'confirm' && index < 3)
                   ? 'bg-primary text-primary-foreground' 
                   : 'bg-muted text-muted-foreground'
                 }`}>
@@ -328,18 +321,26 @@ const AppointmentScheduler: React.FC = () => {
           ) : (
             <div className="grid gap-6 md:grid-cols-2">
               {doctors.map((doctor) => (
-                <Card key={doctor.id} className="medical-card cursor-pointer hover:shadow-medical transition-all duration-300"
+                <Card key={doctor.id} className="medical-card cursor-pointer hover:shadow-lg transition-all duration-300 hover:scale-105"
                   onClick={() => selectDoctor(doctor)}>
                   <CardHeader>
                     <div className="flex items-start space-x-4">
                       <div className="text-4xl">{doctor.image}</div>
                       <div className="flex-1">
-                        <CardTitle className="text-lg">{doctor.name}</CardTitle>
+                        <CardTitle className="text-lg flex items-center gap-2">
+                          {doctor.name}
+                          {doctor.id.startsWith('mock-') || doctor.id.startsWith('fallback-') ? (
+                            <Badge variant="secondary" className="text-xs">Demo</Badge>
+                          ) : (
+                            <Badge variant="default" className="text-xs">Available</Badge>
+                          )}
+                        </CardTitle>
                         <p className="text-muted-foreground">{doctor.specialization}</p>
                         <div className="flex items-center space-x-4 mt-2">
-                          <Badge variant="secondary">
-                            ⭐ {doctor.rating}
-                          </Badge>
+                          <div className="flex items-center space-x-1">
+                            {renderStars(doctor.rating)}
+                            <span className="text-sm text-muted-foreground ml-1">{doctor.rating}</span>
+                          </div>
                           <span className="text-sm text-muted-foreground">{doctor.experience}</span>
                         </div>
                       </div>
@@ -404,7 +405,7 @@ const AppointmentScheduler: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Calendar className="h-5 w-5" />
-                  <span>{t('selectDate')}</span>
+                  <span>Select Date</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -429,7 +430,7 @@ const AppointmentScheduler: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
                   <Clock className="h-5 w-5" />
-                  <span>{t('selectTime')}</span>
+                  <span>Select Time</span>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -483,11 +484,19 @@ const AppointmentScheduler: React.FC = () => {
               <div className="flex items-center space-x-4 p-4 bg-muted/50 rounded-lg">
                 <div className="text-3xl">{selectedDoctor.image}</div>
                 <div>
-                  <h4 className="font-semibold">{selectedDoctor.name}</h4>
+                  <h4 className="font-semibold flex items-center gap-2">
+                    {selectedDoctor.name}
+                    {selectedDoctor.id.startsWith('mock-') || selectedDoctor.id.startsWith('fallback-') ? (
+                      <Badge variant="secondary" className="text-xs">Demo</Badge>
+                    ) : (
+                      <Badge variant="default" className="text-xs">Real Doctor</Badge>
+                    )}
+                  </h4>
                   <p className="text-muted-foreground">{selectedDoctor.specialization}</p>
-                  <Badge variant="secondary" className="mt-1">
-                    ⭐ {selectedDoctor.rating} • {selectedDoctor.experience}
-                  </Badge>
+                  <div className="flex items-center space-x-1 mt-1">
+                    {renderStars(selectedDoctor.rating)}
+                    <span className="text-sm text-muted-foreground ml-1">{selectedDoctor.rating} • {selectedDoctor.experience}</span>
+                  </div>
                 </div>
               </div>
 
@@ -508,12 +517,23 @@ const AppointmentScheduler: React.FC = () => {
                 </div>
               </div>
 
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Appointment Type</label>
+                <div className="flex items-center space-x-2 p-3 bg-muted/50 rounded-lg">
+                  {appointmentType === 'teleconsultation' ? <Video className="h-4 w-4" /> : <MapPin className="h-4 w-4" />}
+                  <span>{appointmentType === 'teleconsultation' ? 'Teleconsultation (Video Call)' : 'In-Person Visit'}</span>
+                </div>
+              </div>
+
               <div className="p-4 bg-primary/5 border border-primary/20 rounded-lg">
                 <h4 className="font-semibold text-primary mb-2">Appointment Notes</h4>
                 <ul className="text-sm space-y-1 text-muted-foreground">
                   <li>• Please arrive 15 minutes early for check-in</li>
                   <li>• Bring a valid ID and insurance card</li>
                   <li>• You'll receive a confirmation email shortly</li>
+                  {selectedDoctor.id.startsWith('mock-') || selectedDoctor.id.startsWith('fallback-') ? (
+                    <li>• This is a demonstration booking for testing purposes</li>
+                  ) : null}
                 </ul>
               </div>
             </CardContent>
@@ -523,8 +543,12 @@ const AppointmentScheduler: React.FC = () => {
             <Button variant="outline" onClick={() => setStep('datetime')}>
               Back
             </Button>
-            <Button onClick={confirmAppointment} className="bg-gradient-primary">
-              {t('bookAppointment')}
+            <Button 
+              onClick={confirmAppointment} 
+              className="bg-gradient-primary"
+              disabled={bookingLoading}
+            >
+              {bookingLoading ? 'Booking...' : 'Book Appointment'}
             </Button>
           </div>
         </div>
