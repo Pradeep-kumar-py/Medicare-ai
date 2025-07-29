@@ -34,7 +34,7 @@ const MedicineHub: React.FC = () => {
       rating: 4.5,
       inStock: true,
       store: 'PharmEasy',
-      storeUrl: 'https://pharmeasy.in',
+      storeUrl: 'https://pharmeasy.in/search/all?name=Paracetamol%20500mg',
       prescription: false
     },
     {
@@ -46,7 +46,7 @@ const MedicineHub: React.FC = () => {
       rating: 4.3,
       inStock: true,
       store: 'Netmeds',
-      storeUrl: 'https://netmeds.com',
+      storeUrl: 'https://netmeds.com/search?query=crocin%20advance',
       prescription: false
     },
     {
@@ -58,7 +58,7 @@ const MedicineHub: React.FC = () => {
       rating: 4.4,
       inStock: true,
       store: '1mg',
-      storeUrl: 'https://1mg.com',
+      storeUrl: 'https://1mg.com/search/all?name=Dolo%20650',
       prescription: false
     },
     {
@@ -70,7 +70,7 @@ const MedicineHub: React.FC = () => {
       rating: 4.2,
       inStock: true,
       store: 'Apollo Pharmacy',
-      storeUrl: 'https://apollopharmacy.in',
+      storeUrl: 'https://apollopharmacy.in/search/all?name=Cetirizine%2010mg',
       prescription: false
     },
     {
@@ -82,7 +82,7 @@ const MedicineHub: React.FC = () => {
       rating: 4.1,
       inStock: true,
       store: 'PharmEasy',
-      storeUrl: 'https://pharmeasy.in',
+      storeUrl: 'https://pharmeasy.in/search/all?name=Azithromycin%20500mg',
       prescription: true
     },
     {
@@ -94,7 +94,7 @@ const MedicineHub: React.FC = () => {
       rating: 4.3,
       inStock: true,
       store: 'Netmeds',
-      storeUrl: 'https://netmeds.com',
+      storeUrl: 'https://netmeds.com/search?query=omeprazole%2020mg',
       prescription: false
     }
   ];
