@@ -42,8 +42,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const navigationItems = isDoctor ? [
     { path: '/doctor-dashboard', icon: BarChart3, label: 'Dashboard' },
-    { path: '/teleconsultation', icon: Video, label: t('teleconsultation') },
-    { path: '/profile', icon: User, label: t('profile') },
   ] : [
     { path: '/', icon: Heart, label: t('home') },
     { path: '/symptoms', icon: Stethoscope, label: t('symptoms') },
@@ -51,10 +49,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { path: '/reminders', icon: Pill, label: t('reminders') },
     { path: '/teleconsultation', icon: Video, label: t('teleconsultation') },
     { path: '/alerts', icon: AlertTriangle, label: t('alerts') },
-    { path: '/trends', icon: TrendingUp, label: t('trends') },
     { path: '/hospitals', icon: MapPin, label: t('hospitals') },
     { path: '/medicine-hub', icon: ShoppingCart, label: t('medicineHub') },
-    { path: '/insurance', icon: Shield, label: t('insurance') },
   ];
 
   const toggleLanguage = () => {
