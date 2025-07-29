@@ -38,7 +38,7 @@ const HospitalLocator: React.FC = () => {
       availability: '24/7',
       emergency: true,
       type: 'Government',
-      coordinates: { lat: 28.5672, lng: 77.2100 }
+      coordinates: { lat: 28.5672, lng: 77.2103 }
     },
     {
       id: '2',
@@ -51,7 +51,7 @@ const HospitalLocator: React.FC = () => {
       availability: '24/7',
       emergency: true,
       type: 'Private',
-      coordinates: { lat: 28.6139, lng: 77.3910 }
+      coordinates: { lat: 19.1618, lng: 72.9418 }
     },
     {
       id: '3',
@@ -77,7 +77,7 @@ const HospitalLocator: React.FC = () => {
       availability: '24/7',
       emergency: true,
       type: 'Government',
-      coordinates: { lat: 28.5672, lng: 77.2050 }
+      coordinates: { lat: 26.8501, lng: 81.0242 }
     },
     {
       id: '5',
@@ -90,7 +90,7 @@ const HospitalLocator: React.FC = () => {
       availability: '24/7',
       emergency: true,
       type: 'Private',
-      coordinates: { lat: 28.6473, lng: 77.1736 }
+      coordinates: { lat: 28.6435, lng: 77.1796 }
     }
   ];
 
@@ -255,7 +255,7 @@ const HospitalLocator: React.FC = () => {
                         <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
                         <span className="text-sm font-medium">{hospital.rating}</span>
                       </div>
-                      <p className="text-sm text-primary font-medium">{hospital.distance} km away</p>
+                      {/* <p className="text-sm text-primary font-medium">{hospital.distance} km away</p> */}
                     </div>
                   </div>
 
