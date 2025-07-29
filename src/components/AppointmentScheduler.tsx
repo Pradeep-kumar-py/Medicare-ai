@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Calendar, Clock, User, MapPin, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, User, MapPin, CheckCircle, Video } from 'lucide-react';
 import { Badge } from './ui/badge';
 import { toast } from '../hooks/use-toast';
 import { appointmentService, doctorService } from '../integrations/supabase/services';
@@ -27,6 +27,7 @@ const AppointmentScheduler: React.FC = () => {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
+  const [appointmentType, setAppointmentType] = useState<'in-person' | 'teleconsultation'>('in-person');
   const [step, setStep] = useState<'doctor' | 'datetime' | 'confirm'>('doctor');
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,7 +39,11 @@ const AppointmentScheduler: React.FC = () => {
   const fetchDoctors = async () => {
     try {
       setLoading(true);
+      console.log('Starting to fetch doctors from database...');
+      
       const dbDoctors = await doctorService.getDoctors();
+      
+      console.log('Raw doctors data from database:', dbDoctors);
       
       // Transform database doctors to match our interface
       const transformedDoctors: Doctor[] = dbDoctors.map((doctor, index) => ({
@@ -51,8 +56,11 @@ const AppointmentScheduler: React.FC = () => {
         nextAvailable: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] // tomorrow
       }));
 
+      console.log('Transformed doctors for UI:', transformedDoctors);
+
       // If no doctors in database, use mock data
       if (transformedDoctors.length === 0) {
+        console.log('No doctors found in database, using mock data');
         const mockDoctors: Doctor[] = [
           {
             id: 'mock-1',
@@ -92,8 +100,10 @@ const AppointmentScheduler: React.FC = () => {
           }
         ];
         setDoctors(mockDoctors);
+        console.log('Using mock doctors:', mockDoctors);
       } else {
         setDoctors(transformedDoctors);
+        console.log('Using database doctors, count:', transformedDoctors.length);
       }
     } catch (error) {
       console.error('Error fetching doctors:', error);
@@ -102,6 +112,21 @@ const AppointmentScheduler: React.FC = () => {
         description: "Failed to load doctors. Please try again.",
         variant: "destructive"
       });
+      
+      // Fallback to mock data on error
+      const fallbackDoctors: Doctor[] = [
+        {
+          id: 'fallback-1',
+          name: 'Dr. Emergency Physician',
+          specialization: 'General Practice',
+          rating: 4.5,
+          experience: '10 years',
+          image: '👩‍⚕️',
+          nextAvailable: '2024-01-15'
+        }
+      ];
+      setDoctors(fallbackDoctors);
+      console.log('Using fallback doctors due to error');
     } finally {
       setLoading(false);
     }
@@ -216,7 +241,7 @@ const AppointmentScheduler: React.FC = () => {
         doctor_id: selectedDoctor.id,
         appointment_date: selectedDate,
         appointment_time: selectedTime,
-        appointment_type: 'consultation',
+        appointment_type: appointmentType === 'teleconsultation' ? 'teleconsultation' : 'consultation',
         reason: 'General consultation',
         status: 'scheduled' as const
       };
@@ -224,8 +249,8 @@ const AppointmentScheduler: React.FC = () => {
       await appointmentService.createAppointment(appointmentData);
       
       toast({
-        title: "Appointment Booked Successfully!",
-        description: `Your appointment with ${selectedDoctor.name} is confirmed for ${selectedDate} at ${selectedTime}.`,
+        title: "Appointment Confirmed!",
+        description: `Your ${appointmentType === 'teleconsultation' ? 'teleconsultation' : 'appointment'} with ${selectedDoctor.name} is confirmed for ${selectedDate} at ${selectedTime}.`,
       });
       
       // Reset form
@@ -343,6 +368,35 @@ const AppointmentScheduler: React.FC = () => {
             <h2 className="text-2xl font-bold">Select Date & Time</h2>
             <p className="text-muted-foreground">Booking with {selectedDoctor.name}</p>
           </div>
+
+          {/* Appointment Type Selection */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Appointment Type</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <Button
+                  variant={appointmentType === 'in-person' ? "default" : "outline"}
+                  onClick={() => setAppointmentType('in-person')}
+                  className="h-auto py-4 flex-col"
+                >
+                  <MapPin className="h-6 w-6 mb-2" />
+                  <span className="font-medium">In-Person Visit</span>
+                  <span className="text-xs opacity-70">Visit doctor's clinic</span>
+                </Button>
+                <Button
+                  variant={appointmentType === 'teleconsultation' ? "default" : "outline"}
+                  onClick={() => setAppointmentType('teleconsultation')}
+                  className="h-auto py-4 flex-col"
+                >
+                  <Video className="h-6 w-6 mb-2" />
+                  <span className="font-medium">Teleconsultation</span>
+                  <span className="text-xs opacity-70">Video call with doctor</span>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
 
           <div className="grid gap-8 lg:grid-cols-2">
             {/* Date Selection */}

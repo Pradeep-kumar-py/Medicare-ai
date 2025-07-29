@@ -15,6 +15,9 @@ import SymptomChecker from "./components/SymptomChecker";
 import AppointmentScheduler from "./components/AppointmentScheduler";
 import MedicationReminder from "./components/MedicationReminder";
 import HealthDashboard from "./components/HealthDashboard";
+import DoctorDashboard from "./components/DoctorDashboard";
+import DatabaseDebug from "./components/DatabaseDebug";
+import SignupDebug from "./components/SignupDebug";
 import Teleconsultation from "./components/Teleconsultation";
 import HealthAlerts from "./components/HealthAlerts";
 import HealthTrends from "./components/HealthTrends";
@@ -87,6 +90,23 @@ const App = () => (
                   <Layout>
                     <Teleconsultation />
                     <Chatbot />
+                  </Layout>
+                } />
+                
+                <Route path="/doctor-dashboard" element={
+                  <ProtectedRoute>
+                    <Layout>
+                      <DoctorDashboard />
+                    </Layout>
+                  </ProtectedRoute>
+                } />
+                
+                <Route path="/debug" element={
+                  <Layout>
+                    <div className="space-y-6">
+                      <SignupDebug />
+                      <DatabaseDebug />
+                    </div>
                   </Layout>
                 } />
                 

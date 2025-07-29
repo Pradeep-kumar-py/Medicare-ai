@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Badge } from './ui/badge';
@@ -42,17 +43,41 @@ interface Message {
 
 const Teleconsultation: React.FC = () => {
   const { t } = useLanguage();
+  const { profile, isDoctor } = useAuth();
   const [isVideoEnabled, setIsVideoEnabled] = useState(false);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [isInCall, setIsInCall] = useState(false);
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [callDuration, setCallDuration] = useState(0);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [roomId, setRoomId] = useState<string | null>(null);
+  const [patientEmail, setPatientEmail] = useState<string | null>(null);
+  const [isDoctorView, setIsDoctorView] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [showChat, setShowChat] = useState(false);
   
-  const videoRef = useRef<HTMLVideoElement>(null);
+    const videoRef = useRef<HTMLVideoElement>(null);
   const callTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Parse URL parameters on component mount
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const roomParam = urlParams.get('room');
+    const doctorParam = urlParams.get('doctor');
+    const patientParam = urlParams.get('patient');
+
+    if (roomParam) {
+      setRoomId(roomParam);
+      setIsDoctorView(doctorParam === 'true' || isDoctor);
+      setPatientEmail(patientParam);
+      
+      // Auto-join the call if parameters are present
+      if (doctorParam === 'true' || patientParam) {
+        setIsInCall(true);
+        // Will be handled by the startCall function when defined
+      }
+    }
+  }, [isDoctor]);
 
   // Mock doctors
   const doctors: Doctor[] = [

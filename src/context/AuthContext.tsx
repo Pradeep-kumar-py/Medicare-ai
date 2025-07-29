@@ -11,6 +11,7 @@ interface AuthContextType {
   profile: Profile | null;
   session: Session | null;
   loading: boolean;
+  isDoctor: boolean;
   signIn: (email: string, password: string) => Promise<{ user: User | null; error: any }>;
   signUp: (email: string, password: string, userData?: any) => Promise<{ user: User | null; error: any }>;
   signOut: () => Promise<{ error: any }>;
@@ -149,10 +150,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const signIn = async (email: string, password: string) => {
     try {
       console.log('Attempting sign in for:', email);
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
+      // Attempt sign in with retry on network failures
+      let data: any, error: any;
+      const maxSignInRetries = 2;
+      for (let attempt = 1; attempt <= maxSignInRetries; attempt++) {
+        ({ data, error } = await supabase.auth.signInWithPassword({ email, password }));
+        if (!error || !error.message?.includes('Load failed')) break;
+        console.warn(`Signin network error (attempt ${attempt}):`, error.message);
+        if (attempt < maxSignInRetries) {
+          await new Promise(res => setTimeout(res, 500 * attempt));
+        }
+      }
       
       if (error) {
         console.error('Sign in error:', error);
@@ -160,6 +168,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
       
       console.log('Sign in successful:', data.user?.email);
+      // Update context state
+      if (data.user) {
+        setSession(data.session ?? null);
+        setUser(data.user);
+        // Fetch profile for the signed-in user
+        await fetchProfile(data.user.id);
+      }
       return { user: data.user, error: null };
     } catch (error) {
       console.error('Sign in error:', error);
@@ -169,24 +184,114 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   const signUp = async (email: string, password: string, userData?: any) => {
     try {
-      console.log('Attempting sign up for:', email);
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: userData,
-        },
-      });
+      console.log('🔄 Attempting sign up for:', email);
+      console.log('📋 User data:', userData);
+      
+      // First, try normal signup with retry on network failures
+      let data: any, error: any;
+      const maxRetries = 2;
+      for (let attempt = 1; attempt <= maxRetries; attempt++) {
+        ({ data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: userData },
+        }));
+        // Break on success or non-network error
+        if (!error || !error.message?.includes('Load failed')) break;
+        console.warn(`Signup network error (attempt ${attempt}):`, error.message);
+        if (attempt < maxRetries) {
+          // wait before retry
+          await new Promise(res => setTimeout(res, 500 * attempt));
+        }
+      }
       
       if (error) {
-        console.error('Sign up error:', error);
+        console.error('❌ Auth signup error:', error);
+        
+        // If it's a database trigger error, try alternative approach
+        if (error.message?.includes('Database error saving new user') || 
+            error.message?.includes('function') ||
+            error.message?.includes('trigger')) {
+          
+          console.log('🔄 Database trigger failed, trying alternative signup...');
+          
+          // Try signup without metadata first
+          const { data: altData, error: altError } = await supabase.auth.signUp({
+            email,
+            password,
+          });
+          
+          if (altError) {
+            console.error('❌ Alternative signup also failed:', altError);
+            throw altError;
+          }
+          
+          console.log('✅ Alternative signup successful:', altData.user?.email);
+          
+          // If successful, manually create profile
+          if (altData.user) {
+            console.log('🔄 Creating profile manually...');
+            
+            try {
+              // First check if profile already exists
+              const { data: existingProfile } = await supabase
+                .from('profiles')
+                .select('id')
+                .eq('id', altData.user.id)
+                .single();
+
+              if (!existingProfile) {
+                const { error: profileError } = await supabase
+                  .from('profiles')
+                  .insert({
+                    id: altData.user.id,
+                    email: email,
+                    full_name: userData?.full_name || '',
+                    role: userData?.role || 'patient',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                  });
+                
+                if (profileError) {
+                  if (profileError.message?.includes('duplicate key')) {
+                    console.log('✅ Profile already exists, continuing...');
+                  } else {
+                    console.error('❌ Manual profile creation failed:', profileError);
+                    console.warn('⚠️ User created but profile creation failed');
+                  }
+                } else {
+                  console.log('✅ Profile created manually');
+                }
+              } else {
+                console.log('✅ Profile already exists');
+              }
+            } catch (profileErr) {
+              console.error('❌ Profile creation exception:', profileErr);
+            }
+          }
+          
+          return { user: altData.user, error: null };
+        }
+        
         throw error;
       }
       
-      console.log('Sign up successful:', data.user?.email);
+      console.log('✅ Sign up successful:', data.user?.email);
+      // Automatically sign in the new user to update context
+      if (data.user) {
+        const { data: signInData, error: signInErr } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (!signInErr && signInData.user) {
+          setSession(signInData.session ?? null);
+          setUser(signInData.user);
+          await fetchProfile(signInData.user.id);
+        }
+      }
       return { user: data.user, error: null };
     } catch (error) {
-      console.error('Sign up error:', error);
+      console.error('💥 Final signup error:', error);
       return { user: null, error };
     }
   };
@@ -223,6 +328,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     profile,
     session,
     loading,
+    isDoctor: profile?.role === 'doctor',
     signIn,
     signUp,
     signOut,

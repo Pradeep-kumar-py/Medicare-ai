@@ -175,6 +175,8 @@ export const appointmentService = {
 // Doctors functions
 export const doctorService = {
   async getDoctors(specialization?: string) {
+    console.log('getDoctors called with specialization:', specialization);
+    
     let query = supabase
       .from('doctors')
       .select(`
@@ -187,13 +189,37 @@ export const doctorService = {
       query = query.eq('specialization', specialization);
     }
 
+    console.log('Executing doctor query...');
     const { data, error } = await query.order('rating', { ascending: false });
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching doctors:', error);
+      throw error;
+    }
+
+    console.log('Fetched doctors from Supabase:', data);
+    console.log('Number of doctors found:', data?.length || 0);
+    
+    // Log individual doctor details
+    data?.forEach((doctor, index) => {
+      console.log(`Doctor ${index + 1}:`, {
+        id: doctor.id,
+        name: doctor.profile?.full_name,
+        specialization: doctor.specialization,
+        experience: doctor.experience_years,
+        consultation_fee: doctor.consultation_fee,
+        rating: doctor.rating,
+        languages: doctor.languages,
+        is_available: doctor.is_available
+      });
+    });
+
     return data;
   },
 
   async getDoctorById(id: string) {
+    console.log('getDoctorById called with id:', id);
+    
     const { data, error } = await supabase
       .from('doctors')
       .select(`
@@ -203,7 +229,12 @@ export const doctorService = {
       .eq('id', id)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching doctor by id:', error);
+      throw error;
+    }
+    
+    console.log('Fetched doctor by id:', data);
     return data;
   }
 };

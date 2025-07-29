@@ -4,7 +4,10 @@ import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
 import { Alert, AlertDescription } from '../ui/alert';
-import { Eye, EyeOff, Mail, Lock, User } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
+import { Textarea } from '../ui/textarea';
+import { Switch } from '../ui/switch';
+import { Eye, EyeOff, Mail, Lock, User, Stethoscope } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from '../../hooks/use-toast';
 import { supabase } from '../../integrations/supabase/client';
@@ -18,15 +21,42 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [isDoctorSignup, setIsDoctorSignup] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: '',
     fullName: '',
     confirmPassword: '',
+    // Doctor specific fields
+    specialization: '',
+    licenseNumber: '',
+    experienceYears: '',
+    consultationFee: '',
+    bio: '',
+    education: '',
+    certifications: '',
+    languages: 'English'
   });
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
   const { signIn, signUp } = useAuth();
+
+  const resetFormData = () => {
+    setFormData({
+      email: '',
+      password: '',
+      fullName: '',
+      confirmPassword: '',
+      specialization: '',
+      licenseNumber: '',
+      experienceYears: '',
+      consultationFee: '',
+      bio: '',
+      education: '',
+      certifications: '',
+      languages: 'English'
+    });
+  };
 
   const validateForm = () => {
     const newErrors: { [key: string]: string } = {};
@@ -51,6 +81,22 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         newErrors.confirmPassword = 'Please confirm your password';
       } else if (formData.password !== formData.confirmPassword) {
         newErrors.confirmPassword = 'Passwords do not match';
+      }
+
+      // Doctor-specific validation
+      if (isDoctorSignup) {
+        if (!formData.specialization) {
+          newErrors.specialization = 'Specialization is required';
+        }
+        if (!formData.licenseNumber) {
+          newErrors.licenseNumber = 'License number is required';
+        }
+        if (!formData.experienceYears || parseInt(formData.experienceYears) < 0) {
+          newErrors.experienceYears = 'Valid experience years required';
+        }
+        if (!formData.consultationFee || parseFloat(formData.consultationFee) <= 0) {
+          newErrors.consultationFee = 'Valid consultation fee required';
+        }
       }
     }
 
@@ -126,19 +172,31 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
           onSuccess?.();
         }
       } else {
+        const userData = { 
+          full_name: formData.fullName,
+          role: isDoctorSignup ? 'doctor' : 'patient'
+        };
+
+        console.log('Signup userData:', userData);
+        console.log('Signup email:', formData.email);
+        console.log('Is doctor signup:', isDoctorSignup);
+
         const { user, error } = await signUp(
           formData.email, 
           formData.password, 
-          { full_name: formData.fullName }
+          userData
         );
         
         if (error) {
+          console.error('Signup error:', error);
           let errorMessage = "Failed to create account";
           if (error.message) {
             if (error.message.includes("User already registered")) {
               errorMessage = "An account with this email already exists. Please sign in instead.";
             } else if (error.message.includes("Password should be at least")) {
               errorMessage = "Password should be at least 6 characters long.";
+            } else if (error.message.includes("Database error saving new user")) {
+              errorMessage = "Database connection issue. Please try again in a moment.";
             } else {
               errorMessage = error.message;
             }
@@ -150,10 +208,134 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
             variant: "destructive",
           });
         } else if (user) {
-          toast({
-            title: "Account Created!",
-            description: "Please check your email to verify your account.",
-          });
+          console.log('User created successfully:', user.id);
+          
+          // Manually create profile if trigger didn't work
+          try {
+            console.log('Checking if profile exists...');
+            const { data: existingProfile } = await supabase
+              .from('profiles')
+              .select('id')
+              .eq('id', user.id)
+              .single();
+
+            if (!existingProfile) {
+              console.log('Profile not found, creating manually...');
+              const { error: profileError } = await supabase
+                .from('profiles')
+                .insert({
+                  id: user.id,
+                  email: formData.email,
+                  full_name: formData.fullName,
+                  role: isDoctorSignup ? 'doctor' : 'patient'
+                });
+
+              if (profileError) {
+                if (profileError.message?.includes('duplicate key')) {
+                  console.log('Profile already exists (duplicate key), continuing...');
+                } else {
+                  console.error('Manual profile creation failed:', profileError);
+                  throw profileError;
+                }
+              } else {
+                console.log('Profile created manually');
+              }
+            } else {
+              console.log('Profile already exists');
+            }
+          } catch (profileError: any) {
+            // Only show error if it's not a duplicate key issue
+            if (!profileError.message?.includes('duplicate key')) {
+              console.error('Profile creation error:', profileError);
+              toast({
+                title: "Profile Creation Failed", 
+                description: `Account created but profile setup failed: ${profileError.message}. Please contact support.`,
+                variant: "destructive",
+              });
+              return;
+            } else {
+              console.log('Profile creation skipped - already exists');
+            }
+          }
+
+          // If doctor signup, create doctor profile
+          if (isDoctorSignup) {
+            try {
+              // Wait a bit for profile to be available
+              await new Promise(resolve => setTimeout(resolve, 1500));
+              
+              console.log('Creating doctor profile for user:', user.id);
+              
+              // Create basic doctor profile with only required fields
+              const { error: doctorError } = await supabase
+                .from('doctors')
+                .insert({
+                  profile_id: user.id,
+                  specialization: formData.specialization,
+                  license_number: formData.licenseNumber,
+                  experience_years: parseInt(formData.experienceYears),
+                  consultation_fee: parseFloat(formData.consultationFee),
+                  is_available: true
+                });
+
+              if (doctorError) {
+                console.error('Error creating basic doctor profile:', doctorError);
+                throw doctorError;
+              }
+
+              // Try to update with optional fields
+              try {
+                const updateData: any = {};
+                if (formData.bio) updateData.bio = formData.bio;
+                if (formData.education) updateData.education = [formData.education];
+                if (formData.certifications) updateData.certifications = [formData.certifications];
+                if (formData.languages) updateData.languages = [formData.languages];
+
+                if (Object.keys(updateData).length > 0) {
+                  const { error: updateError } = await supabase
+                    .from('doctors')
+                    .update(updateData)
+                    .eq('profile_id', user.id);
+
+                  if (updateError) {
+                    console.warn('Warning: Could not update optional doctor fields:', updateError);
+                    // Don't throw here, basic profile is created
+                  }
+                }
+              } catch (updateError) {
+                console.warn('Warning: Could not update optional doctor fields:', updateError);
+                // Continue, basic profile is still created
+              }
+
+              if (doctorError) {
+                console.error('Error creating doctor profile:', doctorError);
+                toast({
+                  title: "Doctor Profile Creation Failed",
+                  description: `Account created but doctor profile setup failed: ${doctorError.message}. Please contact support.`,
+                  variant: "destructive",
+                });
+              } else {
+                console.log('Doctor profile created successfully');
+                toast({
+                  title: "Doctor Account Created!",
+                  description: "Please check your email to confirm your account. Your doctor profile has been set up.",
+                });
+              }
+            } catch (doctorError: any) {
+              console.error('Doctor profile creation error:', doctorError);
+              toast({
+                title: "Doctor Profile Creation Failed",
+                description: `Account created but doctor profile setup failed: ${doctorError.message}. Please contact support.`,
+                variant: "destructive",
+              });
+            }
+          } else {
+            toast({
+              title: "Account Created!",
+              description: "Please check your email to verify your account.",
+            });
+          }
+          
           onSuccess?.();
         }
       }
@@ -200,24 +382,174 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
           {!isLogin && !showForgotPassword && (
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <div className="relative">
-                <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input
-                  id="fullName"
-                  name="fullName"
-                  type="text"
-                  placeholder="Enter your full name"
-                  value={formData.fullName}
-                  onChange={handleInputChange}
-                  className={`pl-10 ${errors.fullName ? 'border-destructive' : ''}`}
-                />
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="fullName"
+                    name="fullName"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={formData.fullName}
+                    onChange={handleInputChange}
+                    className={`pl-10 ${errors.fullName ? 'border-destructive' : ''}`}
+                  />
+                </div>
+                {errors.fullName && (
+                  <p className="text-sm text-destructive">{errors.fullName}</p>
+                )}
               </div>
-              {errors.fullName && (
-                <p className="text-sm text-destructive">{errors.fullName}</p>
+
+              {/* Doctor Signup Toggle */}
+              <div className="flex items-center space-x-2 p-3 bg-muted/30 rounded-lg">
+                <Switch
+                  id="doctor-signup"
+                  checked={isDoctorSignup}
+                  onCheckedChange={setIsDoctorSignup}
+                />
+                <Label htmlFor="doctor-signup" className="flex items-center space-x-2">
+                  <Stethoscope className="h-4 w-4" />
+                  <span>I am a doctor</span>
+                </Label>
+              </div>
+
+              {/* Doctor-specific fields */}
+              {isDoctorSignup && (
+                <div className="space-y-4 p-4 border rounded-lg bg-blue-50 dark:bg-blue-950/20">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100">Doctor Information</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="specialization">Specialization *</Label>
+                      <Select value={formData.specialization} onValueChange={(value) => setFormData(prev => ({ ...prev, specialization: value }))}>
+                        <SelectTrigger className={errors.specialization ? 'border-destructive' : ''}>
+                          <SelectValue placeholder="Select specialization" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="cardiology">Cardiology</SelectItem>
+                          <SelectItem value="dermatology">Dermatology</SelectItem>
+                          <SelectItem value="orthopedics">Orthopedics</SelectItem>
+                          <SelectItem value="pediatrics">Pediatrics</SelectItem>
+                          <SelectItem value="neurology">Neurology</SelectItem>
+                          <SelectItem value="gynecology">Gynecology</SelectItem>
+                          <SelectItem value="psychiatry">Psychiatry</SelectItem>
+                          <SelectItem value="general_practice">General Practice</SelectItem>
+                          <SelectItem value="emergency_medicine">Emergency Medicine</SelectItem>
+                          <SelectItem value="internal_medicine">Internal Medicine</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      {errors.specialization && (
+                        <p className="text-sm text-destructive">{errors.specialization}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="licenseNumber">Medical License Number *</Label>
+                      <Input
+                        id="licenseNumber"
+                        name="licenseNumber"
+                        type="text"
+                        placeholder="Enter license number"
+                        value={formData.licenseNumber}
+                        onChange={handleInputChange}
+                        className={errors.licenseNumber ? 'border-destructive' : ''}
+                      />
+                      {errors.licenseNumber && (
+                        <p className="text-sm text-destructive">{errors.licenseNumber}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="experienceYears">Years of Experience *</Label>
+                      <Input
+                        id="experienceYears"
+                        name="experienceYears"
+                        type="number"
+                        min="0"
+                        max="50"
+                        placeholder="e.g., 5"
+                        value={formData.experienceYears}
+                        onChange={handleInputChange}
+                        className={errors.experienceYears ? 'border-destructive' : ''}
+                      />
+                      {errors.experienceYears && (
+                        <p className="text-sm text-destructive">{errors.experienceYears}</p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="consultationFee">Consultation Fee ($) *</Label>
+                      <Input
+                        id="consultationFee"
+                        name="consultationFee"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        placeholder="e.g., 150.00"
+                        value={formData.consultationFee}
+                        onChange={handleInputChange}
+                        className={errors.consultationFee ? 'border-destructive' : ''}
+                      />
+                      {errors.consultationFee && (
+                        <p className="text-sm text-destructive">{errors.consultationFee}</p>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="bio">Professional Bio</Label>
+                    <Textarea
+                      id="bio"
+                      name="bio"
+                      placeholder="Brief description of your practice and expertise"
+                      value={formData.bio}
+                      onChange={(e) => setFormData(prev => ({ ...prev, bio: e.target.value }))}
+                      className="min-h-[80px]"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="education">Education</Label>
+                      <Input
+                        id="education"
+                        name="education"
+                        type="text"
+                        placeholder="e.g., MD from Harvard Medical School"
+                        value={formData.education}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="certifications">Certifications</Label>
+                      <Input
+                        id="certifications"
+                        name="certifications"
+                        type="text"
+                        placeholder="e.g., Board Certified in Cardiology"
+                        value={formData.certifications}
+                        onChange={handleInputChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="languages">Languages Spoken</Label>
+                    <Input
+                      id="languages"
+                      name="languages"
+                      type="text"
+                      placeholder="e.g., English, Spanish"
+                      value={formData.languages}
+                      onChange={handleInputChange}
+                    />
+                  </div>
+                </div>
               )}
-            </div>
+            </>
           )}
 
           <div className="space-y-2">
@@ -309,7 +641,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
               onClick={() => {
                 setIsLogin(!isLogin);
                 setErrors({});
-                setFormData({ email: '', password: '', fullName: '', confirmPassword: '' });
+                resetFormData();
               }}
               className="text-sm text-primary hover:underline"
             >
@@ -324,7 +656,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
               onClick={() => {
                 setShowForgotPassword(false);
                 setErrors({});
-                setFormData({ email: '', password: '', fullName: '', confirmPassword: '' });
+                resetFormData();
               }}
               className="text-sm text-primary hover:underline"
             >
