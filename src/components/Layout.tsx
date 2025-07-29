@@ -4,6 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { 
   Heart, 
+  Hospital,
   Stethoscope, 
   Calendar, 
   Pill, 
@@ -43,7 +44,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navigationItems = isDoctor ? [
     { path: '/doctor-dashboard', icon: BarChart3, label: 'Dashboard' },
   ] : [
-    { path: '/', icon: Heart, label: t('home') },
+    { path: '/', icon: Hospital, label: t('home') },
     { path: '/symptoms', icon: Stethoscope, label: t('symptoms') },
     { path: '/appointments', icon: Calendar, label: t('appointments') },
     { path: '/reminders', icon: Pill, label: t('reminders') },
@@ -92,7 +93,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="w-full flex h-14 sm:h-16 items-center justify-between px-4">
           <Link to="/" className="flex  items-center space-x-2">
             <div className="h-7 w-7 sm:h-8 sm:w-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-              {/* <Heart className="h-4 w-4 sm:h-5 sm:w-5 text-white" /> */}
+              <Hospital className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
             </div>
             <span className="font-bold text-lg sm:text-xl bg-gradient-primary bg-clip-text text-transparent">
               Medicare-ai
@@ -253,7 +254,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
             <div className="space-y-3 col-span-1 sm:col-span-2 md:col-span-1">
               <div className="flex items-center space-x-2">
-                <Heart className="h-5 w-5 text-primary" />
+                <Hospital className="h-5 w-5 text-primary" />
                 <span className="font-semibold">Vital Vue Assist</span>
               </div>
               <p className="text-sm text-muted-foreground">

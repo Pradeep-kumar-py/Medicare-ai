@@ -3,14 +3,15 @@ import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { Button } from './ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { 
-  Heart, 
-  Stethoscope, 
-  Calendar, 
-  Pill, 
-  BarChart3, 
-  Video, 
-  AlertTriangle, 
+import {
+  Heart,
+  Hospital,
+  Stethoscope,
+  Calendar,
+  Pill,
+  BarChart3,
+  Video,
+  AlertTriangle,
   TrendingUp,
   ArrowRight,
   CheckCircle,
@@ -47,9 +48,9 @@ const Home: React.FC = () => {
     },
     {
       icon: BarChart3,
-      title: t('dashboard'),
-      description: 'Comprehensive health metrics and insights',
-      path: '/dashboard',
+      title: t('Medicine Hub'),
+      description: 'Browse and order medicines online with ease',
+      path: '/medicine-hub',
       color: 'from-orange-500 to-red-500'
     },
     {
@@ -66,13 +67,7 @@ const Home: React.FC = () => {
       path: '/alerts',
       color: 'from-yellow-500 to-orange-500'
     },
-    {
-      icon: TrendingUp,
-      title: t('trends'),
-      description: 'Community health trends and environmental data',
-      path: '/trends',
-      color: 'from-teal-500 to-green-500'
-    }
+
   ];
 
   return (
@@ -80,8 +75,8 @@ const Home: React.FC = () => {
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary to-secondary py-12 sm:py-16 md:py-20 text-white">
         <div className="container text-center space-y-4 sm:space-y-6 md:space-y-8 px-4">
-<div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-card/20 rounded-full mb-4 sm:mb-6 md:mb-8">
-            <Heart className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" />
+          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-card/20 rounded-full mb-4 sm:mb-6 md:mb-8">
+            <Hospital className="h-6 w-6 sm:h-8 sm:w-8 md:h-10 md:w-10" />
           </div>
           <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight px-2">
             {t('welcomeTitle')}
@@ -92,10 +87,12 @@ const Home: React.FC = () => {
           <p className="text-sm sm:text-base md:text-lg opacity-80 max-w-2xl mx-auto px-2 sm:px-4">
             {t('welcomeDescription')}
           </p>
-          <Button size="lg" variant="secondary" className="mt-6 sm:mt-8">
-            {t('getStarted')}
-            <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
-          </Button>
+          <Link to="/symptoms">
+            <Button size="lg" variant="secondary" className="mt-6 sm:mt-8">
+              {t('getStarted')}
+              <ArrowRight className="ml-2 h-4 w-4 sm:h-5 sm:w-5" />
+            </Button>
+          </Link>
         </div>
       </section>
 
@@ -144,7 +141,7 @@ const Home: React.FC = () => {
           <div className="max-w-4xl mx-auto text-center space-y-6 sm:space-y-8">
             <div className="space-y-3 sm:space-y-4">
               <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 bg-primary/10 rounded-full mb-3 sm:mb-4">
-                <HandHeart className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
+                <Hospital className="h-6 w-6 sm:h-8 sm:w-8 text-primary" />
               </div>
               <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold px-2">Support Healthcare for Everyone</h2>
               <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto px-2">
@@ -205,9 +202,9 @@ const Home: React.FC = () => {
                 <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 w-full sm:w-auto">
                   <div className="flex items-center">
                     <span className="text-lg font-medium mr-2">$</span>
-                    <input 
-                      type="number" 
-                      placeholder="100" 
+                    <input
+                      type="number"
+                      placeholder="100"
                       className="w-20 sm:w-24 px-3 py-2 border rounded-md text-center text-sm sm:text-base"
                       min="1"
                     />
@@ -237,7 +234,7 @@ const Home: React.FC = () => {
           <div className="grid gap-6 sm:gap-8 grid-cols-2 md:grid-cols-4 text-center">
             {[
               { icon: Users, label: 'Active Users', value: '50K+' },
-              { icon: Heart, label: 'Health Assessments', value: '200K+' },
+              { icon: Hospital, label: 'Health Assessments', value: '200K+' },
               { icon: CheckCircle, label: 'Appointments Booked', value: '75K+' },
               { icon: Shield, label: 'Accuracy Rate', value: '95%' }
             ].map((stat, index) => {

@@ -489,7 +489,7 @@ const MedicationReminder: React.FC = () => {
                   id="frequency"
                   value={formData.frequency}
                   onChange={(e) => setFormData(prev => ({ ...prev, frequency: e.target.value }))}
-                  className="w-full p-2 border rounded-md"
+                  className="w-full p-2  border rounded-md dark:bg-black dark:text-gray-200"
                 >
                   <option value="daily">Once daily</option>
                   <option value="twice-daily">Twice daily</option>
