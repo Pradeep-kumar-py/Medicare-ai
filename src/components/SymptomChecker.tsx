@@ -77,7 +77,7 @@ const SymptomChecker: React.FC = () => {
         additional_info: additionalInfo || undefined
       };
 
-      const response = await fetch('http://localhost:8000/symptom-analysis', {
+      const response = await fetch('https://gpptch45-8000.inc1.devtunnels.ms/symptom-analysis', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
