@@ -301,7 +301,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </div>
           
           <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t text-center text-xs sm:text-sm text-muted-foreground">
-            © 2024 Vital Vue Assist. All rights reserved. Built for healthcare innovation.
+            Built for healthcare innovation by team BIT for BYTE
           </div>
         </div>
       </footer>
