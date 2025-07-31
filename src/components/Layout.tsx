@@ -257,7 +257,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className="space-y-3 col-span-1 sm:col-span-2 md:col-span-1">
               <div className="flex items-center space-x-2">
                 <Hospital className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Vital Vue Assist</span>
+                <span className="font-semibold">Medi-care AI</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Your trusted AI-powered healthcare companion for better health management.
