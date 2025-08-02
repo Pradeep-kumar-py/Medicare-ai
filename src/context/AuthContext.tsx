@@ -42,10 +42,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const fetchProfile = async (userId: string) => {
     try {
       setLoading(true);
-      // Add timeout to prevent infinite loading
+      // Add timeout to prevent infinite loading - increased to 20 seconds
       const profilePromise = profileService.getCurrentProfile();
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 10000)
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 20000)
       );
       
       const profile = await Promise.race([profilePromise, timeoutPromise]);
@@ -54,6 +54,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.error('Error fetching profile:', error);
       // Don't block auth flow if profile fetch fails
       setProfile(null);
+      // Show a non-blocking toast notification
+      if (error instanceof Error && error.message === 'Profile fetch timeout') {
+        console.warn('Profile fetch timed out - continuing with limited functionality');
+      }
     } finally {
       setLoading(false);
     }

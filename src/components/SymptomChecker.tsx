@@ -9,6 +9,8 @@ import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Stethoscope, AlertCircle, Info, Thermometer, Search, Mic, MicOff, UserCheck, Calendar, X, Plus } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
+import { buildApiUrl, API_CONFIG, apiRequest } from '../config/api';
+import ApiHealthCheck from './ApiHealthCheck';
 
 interface SuggestedCondition {
   name: string;
@@ -37,6 +39,7 @@ const SymptomChecker: React.FC = () => {
   const [generalAdvice, setGeneralAdvice] = useState('');
   const [emergencyWarning, setEmergencyWarning] = useState('');
   const [isListening, setIsListening] = useState(false);
+  const [showApiDebug, setShowApiDebug] = useState(false);
 
   const addSymptom = (symptom: string) => {
     const trimmedSymptom = symptom.trim();
@@ -77,19 +80,28 @@ const SymptomChecker: React.FC = () => {
         additional_info: additionalInfo || undefined
       };
 
-      const response = await fetch('http://localhost:8000/symptom-analysis', {
+      console.log('Sending request to:', buildApiUrl(API_CONFIG.ENDPOINTS.SYMPTOM_ANALYSIS));
+      console.log('Request data:', requestData);
+
+      const response = await apiRequest(buildApiUrl(API_CONFIG.ENDPOINTS.SYMPTOM_ANALYSIS), {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify(requestData)
       });
 
+      console.log('Response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Analysis failed');
+        const errorText = await response.text();
+        console.error('API Error:', errorText);
+        
+        // Fallback to demo data if API fails
+        console.log('Falling back to demo analysis...');
+        provideFallbackAnalysis();
+        return;
       }
 
       const data: AnalysisResponse = await response.json();
+      console.log('Response data:', data);
       
       setSuggestions(data.conditions);
       setGeneralAdvice(data.general_advice);
@@ -100,14 +112,106 @@ const SymptomChecker: React.FC = () => {
         description: `Found ${data.conditions.length} potential conditions based on your symptoms.`,
       });
     } catch (error) {
+      console.error('Network error:', error);
+      
       toast({
-        title: "Analysis Failed",
-        description: "Unable to analyze symptoms. Please try again later.",
-        variant: "destructive"
+        title: "API Temporarily Unavailable",
+        description: "Using offline analysis mode. For accurate results, please try again later.",
+        variant: "default"
       });
+      
+      // Provide fallback demo analysis
+      provideFallbackAnalysis();
     } finally {
       setIsAnalyzing(false);
     }
+  };
+
+  const provideFallbackAnalysis = () => {
+    // Generate demo analysis based on common symptoms
+    const commonConditions = generateFallbackConditions(symptoms);
+    setSuggestions(commonConditions);
+    setGeneralAdvice("This is a demo analysis since the AI backend is temporarily unavailable. Please consult with a healthcare professional for accurate diagnosis.");
+    setEmergencyWarning(symptoms.some(s => 
+      s.toLowerCase().includes('chest pain') || 
+      s.toLowerCase().includes('difficulty breathing') ||
+      s.toLowerCase().includes('severe headache')
+    ) ? "If you're experiencing severe symptoms, please seek immediate medical attention or call emergency services." : "");
+  };
+
+  const generateFallbackConditions = (userSymptoms: string[]): SuggestedCondition[] => {
+    const symptomKeywords = userSymptoms.join(' ').toLowerCase();
+    const conditions: SuggestedCondition[] = [];
+
+    // Common cold/flu symptoms
+    if (symptomKeywords.includes('fever') || symptomKeywords.includes('cough') || symptomKeywords.includes('headache')) {
+      conditions.push({
+        name: "Common Cold/Flu",
+        probability: 70,
+        severity: "low" as const,
+        recommendations: [
+          "Get plenty of rest",
+          "Stay hydrated with fluids",
+          "Consider over-the-counter pain relievers",
+          "Monitor temperature regularly"
+        ],
+        specialists: ["General Practitioner", "Family Medicine"],
+        urgency: "routine" as const
+      });
+    }
+
+    // Digestive issues
+    if (symptomKeywords.includes('nausea') || symptomKeywords.includes('stomach') || symptomKeywords.includes('vomit')) {
+      conditions.push({
+        name: "Gastroenteritis",
+        probability: 60,
+        severity: "medium" as const,
+        recommendations: [
+          "Stay hydrated with clear fluids",
+          "Follow BRAT diet (bananas, rice, applesauce, toast)",
+          "Avoid dairy and fatty foods",
+          "Rest and monitor symptoms"
+        ],
+        specialists: ["General Practitioner", "Gastroenterologist"],
+        urgency: "soon" as const
+      });
+    }
+
+    // Stress/anxiety symptoms
+    if (symptomKeywords.includes('stress') || symptomKeywords.includes('anxiety') || symptomKeywords.includes('worry')) {
+      conditions.push({
+        name: "Stress/Anxiety",
+        probability: 65,
+        severity: "medium" as const,
+        recommendations: [
+          "Practice deep breathing exercises",
+          "Consider meditation or mindfulness",
+          "Maintain regular sleep schedule",
+          "Talk to someone you trust"
+        ],
+        specialists: ["Psychologist", "Psychiatrist", "Counselor"],
+        urgency: "routine" as const
+      });
+    }
+
+    // Default general condition if no specific matches
+    if (conditions.length === 0) {
+      conditions.push({
+        name: "General Health Concern",
+        probability: 50,
+        severity: "low" as const,
+        recommendations: [
+          "Monitor symptoms over the next 24-48 hours",
+          "Maintain healthy lifestyle habits",
+          "Stay hydrated and get adequate rest",
+          "Consult healthcare provider if symptoms persist"
+        ],
+        specialists: ["General Practitioner"],
+        urgency: "routine" as const
+      });
+    }
+
+    return conditions;
   };
 
   const startVoiceInput = () => {
@@ -193,7 +297,26 @@ const SymptomChecker: React.FC = () => {
         <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto px-4">
           Describe your symptoms and get AI-powered health insights and recommendations.
         </p>
+        
+        {/* API Debug Toggle */}
+        <div className="flex justify-center">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => setShowApiDebug(!showApiDebug)}
+            className="text-xs text-muted-foreground"
+          >
+            {showApiDebug ? 'Hide' : 'Show'} API Status
+          </Button>
+        </div>
       </div>
+
+      {/* API Health Check (Debug) */}
+      {showApiDebug && (
+        <div className="max-w-2xl mx-auto">
+          <ApiHealthCheck />
+        </div>
+      )}
 
       {/* Symptom Input */}
       <Card className="max-w-2xl mx-auto">
