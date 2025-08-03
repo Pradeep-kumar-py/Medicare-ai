@@ -124,7 +124,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
           {/* Controls */}
           <div className="flex items-center space-x-1 sm:space-x-2">
-            <Button onClick={() => { window.open('http://localhost:8000'); }} >Report Analysis</Button>
+            <Button onClick={() => { window.open('https://mental-health-ai-backend-suggestion.onrender.com'); }} >Report Analysis</Button>
             <Button onClick={() => { window.open('https://mental-health-ai-kohl.vercel.app'); }} >Mental Health AI</Button>
             <ThemeToggle />
             <Button
