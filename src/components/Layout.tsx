@@ -19,7 +19,8 @@ import {
   ShoppingCart,
   Shield,
   User,
-  LogOut
+  LogOut,
+  Ambulance
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { ThemeToggle } from './ui/theme-toggle';
@@ -49,6 +50,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { path: '/appointments', icon: Calendar, label: t('appointments') },
     { path: '/reminders', icon: Pill, label: t('reminders') },
     { path: '/teleconsultation', icon: Video, label: t('teleconsultation') },
+    { path: '/ambulance', icon: Ambulance, label: 'Ambulance' },
     { path: '/alerts', icon: AlertTriangle, label: t('alerts') },
     { path: '/hospital-locator', icon: MapPin, label: t('hospitals') },
     { path: '/medicine-hub', icon: ShoppingCart, label: t('medicineHub') },
