@@ -1,0 +1,16 @@
+# netlify.toml
+
+[build]
+  # Use npm install with legacy peer deps flag before build
+  command = "npm install --legacy-peer-deps && npm run build"
+  
+  # Directory to deploy, adjust if your build output is somewhere else (e.g., 'dist', 'build', 'public')
+  publish = "build"
+
+[context.production]
+  # Optional: In production context, you can override or add build command or environment variables if needed
+  command = "npm install --legacy-peer-deps && npm run build"
+
+# You can also define environment variables here or in the Netlify UI
+#[build.environment]
+#  NODE_ENV = "production"

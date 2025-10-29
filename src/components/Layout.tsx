@@ -19,7 +19,8 @@ import {
   ShoppingCart,
   Shield,
   User,
-  LogOut
+  LogOut,
+  Ambulance
 } from 'lucide-react';
 import { Button } from './ui/button';
 import { ThemeToggle } from './ui/theme-toggle';
@@ -49,6 +50,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { path: '/appointments', icon: Calendar, label: t('appointments') },
     { path: '/reminders', icon: Pill, label: t('reminders') },
     { path: '/teleconsultation', icon: Video, label: t('teleconsultation') },
+    { path: '/ambulance', icon: Ambulance, label: 'Ambulance' },
     { path: '/alerts', icon: AlertTriangle, label: t('alerts') },
     { path: '/hospital-locator', icon: MapPin, label: t('hospitals') },
     { path: '/medicine-hub', icon: ShoppingCart, label: t('medicineHub') },
@@ -124,6 +126,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
           {/* Controls */}
           <div className="flex items-center space-x-1 sm:space-x-2">
+            <Button onClick={() => { window.open('https://mental-health-ai-backend-suggestion.onrender.com'); }} >Report Analysis</Button>
+            <Button onClick={() => { window.open('https://mental-health-ai-kohl.vercel.app'); }} >Mental Health AI</Button>
             <ThemeToggle />
             <Button
               variant="outline"
@@ -255,7 +259,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             <div className="space-y-3 col-span-1 sm:col-span-2 md:col-span-1">
               <div className="flex items-center space-x-2">
                 <Hospital className="h-5 w-5 text-primary" />
-                <span className="font-semibold">Vital Vue Assist</span>
+                <span className="font-semibold">Medi-care AI</span>
               </div>
               <p className="text-sm text-muted-foreground">
                 Your trusted AI-powered healthcare companion for better health management.
@@ -299,7 +303,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           </div>
           
           <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t text-center text-xs sm:text-sm text-muted-foreground">
-            © 2024 Vital Vue Assist. All rights reserved. Built for healthcare innovation.
+            Built for healthcare innovation by team BIT for BYTE
           </div>
         </div>
       </footer>

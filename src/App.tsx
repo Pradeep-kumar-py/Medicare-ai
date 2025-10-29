@@ -19,10 +19,13 @@ import DoctorDashboard from "./components/DoctorDashboard";
 import DatabaseDebug from "./components/DatabaseDebug";
 import SignupDebug from "./components/SignupDebug";
 import Teleconsultation from "./components/Teleconsultation";
+import TeleconsultancyPrototype from "./components/TeleconsultancyPrototype";
+import TeleconsultancyPrototypePage from "./pages/TeleconsultancyPrototype";
 import HealthAlerts from "./components/HealthAlerts";
 import HealthTrends from "./components/HealthTrends";
 import MedicineHub from "./components/MedicineHub";
 import HospitalLocator from "./components/HospitalLocator";
+import AmbulanceSystem from "./components/AmbulanceSystem";
 import InsuranceSupport from "./components/InsuranceSupport";
 import Profile from "./components/Profile";
 import Chatbot from "./components/Chatbot";
@@ -88,8 +91,15 @@ const App = () => (
                 
                 <Route path="/teleconsultation" element={
                   <Layout>
-                    <Teleconsultation />
-                    <Chatbot />
+                    <TeleconsultancyPrototype />
+                  </Layout>
+                } />
+
+                {/* Teleconsultancy Prototype for Presentation */}
+                <Route path="/teleconsultancy-prototype" element={
+                  <Layout>
+                    {/* No Chatbot for clean demo */}
+                    <TeleconsultancyPrototypePage />
                   </Layout>
                 } />
                 
@@ -135,6 +145,12 @@ const App = () => (
                   <Layout>
                     <HospitalLocator />
                     <Chatbot />
+                  </Layout>
+                } />
+                
+                <Route path="/ambulance" element={
+                  <Layout>
+                    <AmbulanceSystem />
                   </Layout>
                 } />
                 
